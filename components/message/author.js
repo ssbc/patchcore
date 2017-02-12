@@ -1,16 +1,15 @@
-const h = require('../h')
+const h = require('mutant/h')
 
 exports.gives = {
-  message_components: true
+  message_author: true
 }
 
 exports.create = function (api) {
   return {
-    message_components
+    message_author
   }
 
-  function message_components (msg) {
+  function message_author (msg) {
     return h('div', {}, [msg.value.author])
   }
 }
-

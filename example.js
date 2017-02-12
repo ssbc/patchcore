@@ -1,10 +1,25 @@
 const combine = require('depject')
+const apply = require('depject/apply')
+const h = require('mutant/h')
 
 const modules = require('./')
-
-const sockets = combine(modules)
+var api = entry(combine(modules))
 
 // TODO depject.entry(sockets, {
 //  app: 'first'
 // })()
-sockets.app[0]()
+
+var app = h('div.App', [
+  api.render_feed(api.feeds.public)
+])
+
+document.body.appendChild(app)
+
+function entry (sockets) {
+  return {
+    render_feed: apply.first(sockets.render_feed),
+    feeds: {
+      public: apply.first(sockets.feeds.public)
+    }
+  }
+}

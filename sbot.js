@@ -14,6 +14,9 @@ exports.needs = {
 
 exports.gives = {
   sbot_log: true,
+  sbot_get: true,
+  sbot_query: true,
+  sbot_publish: true,
   connection_status: true
 }
 
@@ -24,10 +27,10 @@ exports.create = function (api) {
   var sbot = null
   var connection_status = []
 
-  var rec = { 
+  var rec = {
     sync: () => {},
     async: () => {},
-    source: () => {},
+    source: () => {}
   }
 
   var rec = Reconnect(function (isConn) {
@@ -72,6 +75,15 @@ exports.create = function (api) {
     sbot_user_feed: rec.source(opts => {
       return sbot.createUserStream(opts)
     }),
+    sbot_get: rec.async(function (key, cb) {
+      if('function' !== typeof cb)
+        throw new Error('cb must be function')
+      if(CACHE[key]) cb(null, CACHE[key])
+      else sbot.get(key, function (err, value) {
+        if(err) return cb(err)
+        cb(null, CACHE[key] = value)
+      })
+    }),
     sbot_publish: rec.async((content, cb) => {
       if(content.recps)
         content = ssbKeys.box(content, content.recps.map(e => {
@@ -102,4 +114,3 @@ exports.create = function (api) {
     })
   }
 }
-

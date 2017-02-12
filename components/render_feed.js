@@ -1,6 +1,5 @@
 const pull = require('pull-stream')
-
-const h = require('../h')
+const h = require('mutant/h')
 
 exports.needs = {
   message_render: 'first',
@@ -8,23 +7,22 @@ exports.needs = {
 }
 
 exports.gives = {
-  page: true
+  render_feed: true
 }
 
 exports.create = function (api) {
   return {
-    page
+    render_feed
   }
 
-  function page () {
-    const container = h('div') 
+  function render_feed (stream) {
+    const container = h('div')
 
     pull(
-      api.sbot_log({reverse: true, limit: 100}),
+      stream({reverse: true, limit: 100}),
       pull.drain(msg => container.appendChild(api.message_render(msg)))
     )
 
     return container
   }
 }
-

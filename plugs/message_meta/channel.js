@@ -1,17 +1,16 @@
-const h = require('../h')
+const h = require('mutant/h')
 
 exports.gives = {
-  metas: true
+  message_meta: true
 }
 
 exports.create = function (api) {
   return {
-    metas: channel
+    message_meta: channel
   }
 
   function channel (msg) {
     const { channel } = msg.value.content
-    if (channel) return h('span', {}, ['#'+channel])
+    if (channel) return h('span', {}, ['#' + channel])
   }
 }
-

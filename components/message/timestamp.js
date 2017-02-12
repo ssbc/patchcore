@@ -1,4 +1,4 @@
-const h = require('../h')
+const h = require('mutant/h') 
 
 exports.gives = {
   message_components: true
