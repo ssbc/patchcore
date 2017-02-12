@@ -10,6 +10,6 @@ exports.create = function (api) {
   }
 
   function message_author (msg) {
-    return h('div', {}, [msg.value.author])
+    return h('div', {}, [msg.value.author.slice(0, 10)])
   }
 }

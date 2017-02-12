@@ -27,7 +27,8 @@ exports.create = function (api) {
   // scoped
 
   function full (msg, opts) {
-    var msgEl = h('Message', {
+    var msgEl = h('div', {
+      classList: 'Message',
       'ev-keydown': navigateToMessageOnEnter,
       attributes: {
         tabindex: '0',
@@ -66,7 +67,8 @@ exports.create = function (api) {
   }
 
   function mini(msg, opts) {
-    return h('Message -mini', {
+    return h('div', {
+      classList: 'Message -mini',
       attributes: {
         tabindex: '0',
         'data-key': msg.key

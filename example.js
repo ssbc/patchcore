@@ -6,8 +6,18 @@ const modules = require('./')
 var api = entry(combine(modules))
 
 // TODO depject.entry(sockets, {
-//  app: 'first'
+//   render_feed: 'first',
+//   feeds: {
+//     public: 'first'
+//   }
 // })()
+
+require('insert-css')(`
+  .Message {
+    padding: 20px;
+    border-bottom: 1px solid #EEE
+  }
+`)
 
 var app = h('div.App', [
   api.render_feed(api.feeds.public)
