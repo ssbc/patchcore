@@ -35,6 +35,7 @@ function About (api, id) {
   })
 
   var hasName = false
+  var hasImage = false
 
   var abortable = Abortable()
 
@@ -52,7 +53,7 @@ function About (api, id) {
 
   // get live changes
   pull(
-    api.sbot_user_feed({tail: true, id}),
+    api.sbot_user_feed({old: false, id}),
     pull.drain(update)
   )
 
@@ -63,11 +64,16 @@ function About (api, id) {
   function update (item) {
     if (item.value && item.value.content.type === 'about' && item.value.content.about === id) {
       if (item.value.content.name) {
-        hasName = true
-        obs.displayName.set(item.value.content.name)
+        if (!hasName || hasName < item.value.timestamp) {
+          hasName = item.value.timestamp
+          obs.displayName.set(item.value.content.name)
+        }
       }
       if (item.value.content.image) {
-        obs.image.set(item.value.content.image)
+        if (!hasImage || hasImage < item.value.timestamp) {
+          hasImage = item.value.timestamp
+          obs.image.set(item.value.content.image)
+        }
       }
     }
   }
