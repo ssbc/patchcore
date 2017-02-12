@@ -30,7 +30,7 @@ function About (api, id) {
   // naive about that only looks at what a feed asserts about itself
 
   var obs = Struct({
-    displayName: Value(id.slice(0, 10)),
+    displayName: Value(id.slice(1, 10)),
     image: Value()
   })
 

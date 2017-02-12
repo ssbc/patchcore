@@ -14,8 +14,8 @@ exports.create = function (api) {
   }
 
   function message_author (msg) {
-    return h('div', {}, [
-      api.obs_about_name(msg.value.author)
+    return h('div', {title: msg.value.author}, [
+      '@', api.obs_about_name(msg.value.author)
     ])
   }
 }
