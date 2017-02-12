@@ -1,8 +1,9 @@
 const combine = require('depject')
 const apply = require('depject/apply')
 const h = require('mutant/h')
+const fs = require('fs')
 
-const modules = require('./')
+const modules = require('../')
 var api = entry(combine(modules))
 
 // TODO depject.entry(sockets, {
@@ -12,21 +13,13 @@ var api = entry(combine(modules))
 //   }
 // })()
 
-require('insert-css')(`
-  .Message {
-    padding: 20px;
-    border-bottom: 1px solid #EEE;
-  }
-
-  .Message > header.author {
-    font-weight: bold;
-  }
-`)
+require('insert-css')(fs.readFileSync(__dirname + '/styles.css', 'utf8'))
 
 var app = h('div.App', [
   api.render_feed(api.feeds.public)
 ])
 
+document.head.appendChild(h('title', 'PATCHCORE :: Example'))
 document.body.appendChild(app)
 
 function entry (sockets) {
