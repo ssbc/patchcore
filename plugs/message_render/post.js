@@ -16,6 +16,7 @@ exports.create = function (api) {
   }
 
   function message_render (msg) {
+    if (msg.value.content.type !== 'post') return
     return api.message_layout(msg, {
       title: message_title(msg),
       content: message_content(msg),
@@ -30,6 +31,6 @@ exports.create = function (api) {
 
   function message_title (data) {
     var root = data.value.content && data.value.content.root
-    return !root ? null : h('span', 're: ', api.message_link(root))
+    return !root ? null : h('span', ['re: ', api.message_link(root)])
   }
 }

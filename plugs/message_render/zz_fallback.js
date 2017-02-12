@@ -21,6 +21,10 @@ exports.create = function (api) {
   }
 
   function message_content (msg) {
-    return h('code', {}, msg.value.content.type)
+    if (typeof msg.value.content === 'string') {
+      return h('code', {}, 'PRIVATE')
+    } else {
+      return h('code', {}, msg.value.content.type)
+    }
   }
 }
