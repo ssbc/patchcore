@@ -15,6 +15,7 @@ exports.needs = {
 exports.gives = {
   sbot_log: true,
   sbot_get: true,
+  sbot_user_feed: true,
   sbot_query: true,
   sbot_publish: true,
   connection_status: true

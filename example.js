@@ -15,7 +15,11 @@ var api = entry(combine(modules))
 require('insert-css')(`
   .Message {
     padding: 20px;
-    border-bottom: 1px solid #EEE
+    border-bottom: 1px solid #EEE;
+  }
+
+  .Message > header.author {
+    font-weight: bold;
   }
 `)
 
