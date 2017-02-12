@@ -28,7 +28,7 @@
     "bulkify": "^1.4.2",
     "emoji-named-characters": "^1.0.2",
     "es2040": "^1.2.4",
-    "mutant": "^3.13.1",
+    "mutant": "^3.13.2",
     "pull-abortable": "^4.1.0",
     "pull-reconnect": "0.0.3",
     "pull-stream": "^3.5.0",
