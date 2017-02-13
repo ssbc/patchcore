@@ -2,6 +2,7 @@ var {Value, Struct, computed} = require('mutant')
 var Abortable = require('pull-abortable')
 var pull = require('pull-stream')
 var msgs = require('ssb-msgs')
+var visualize = require('visualize-buffer')
 
 exports.needs = {
   sbot_user_feed: 'first',
@@ -19,14 +20,7 @@ exports.create = function (api) {
   return {
     obs_about_name: (id) => get(id).displayName,
     obs_about_image: (id) => get(id).image,
-    obs_about_image_url: (id) => {
-      return computed(get(id).image, (image) => {
-        var obj = msgs.link(image, 'blob')
-        if (obj) {
-          return api.blob_url(obj.link)
-        }
-      })
-    }
+    obs_about_image_url: (id) => get(id).imageUrl
   }
 
   function get (id) {
@@ -40,9 +34,20 @@ exports.create = function (api) {
 function About (api, id) {
   // naive about that only looks at what a feed asserts about itself
 
+  var fallbackImageUrl = genImage(id)
+
   var obs = Struct({
     displayName: Value(id.slice(1, 10)),
-    image: Value()
+    image: Value(genImage(id))
+  })
+
+  obs.imageUrl = computed(obs.image, (image) => {
+    var obj = msgs.link(image, 'blob')
+    if (obj) {
+      return api.blob_url(obj.link)
+    } else {
+      return fallbackImageUrl
+    }
   })
 
   var hasName = false
@@ -88,4 +93,8 @@ function About (api, id) {
       }
     }
   }
+}
+
+function genImage (id) {
+  return visualize(new Buffer(id.substring(1), 'base64'), 256).src
 }
