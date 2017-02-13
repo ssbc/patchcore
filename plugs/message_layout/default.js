@@ -4,7 +4,10 @@ exports.needs = {
   message_backlinks: 'first',
   message_author: 'first',
   message_meta: 'map',
-  message_action: 'map'
+  message_action: 'map',
+  message: {
+    timestamp: 'first'
+  }
 }
 
 exports.gives = {
@@ -22,6 +25,7 @@ exports.create = function (api) {
       classList: 'Message'
     }, [
       h('header.author', {}, api.message_author(msg)),
+      h('section.timestamp', {}, api.message.timestamp(msg)),
       h('section.title', {}, opts.title),
       h('section.meta', {}, api.message_meta(msg)),
       h('section.content', {}, opts.content),

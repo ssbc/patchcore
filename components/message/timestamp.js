@@ -1,16 +1,17 @@
 const h = require('mutant/h') 
+const nest = require('depnest')
 
-exports.gives = {
-  message_components: true
-}
+exports.gives = nest('message.timestamp')
+exports.needs = nest('obs.timeAgo', 'first')
 
 exports.create = function (api) {
-  return {
-    message_components
-  }
+  return nest('message.timestamp', timestamp)
 
-  function message_components (msg) {
-    return h('div', new Date(msg.value.timestamp).toString())
+  function timestamp (msg) {
+    return h('a.Timestamp', {
+      href: msg.key,
+      title: new Date(msg.value.timestamp)
+    }, api.obs.timeAgo(msg.value.timestamp))
   }
 }
 

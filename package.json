@@ -26,8 +26,10 @@
   "dependencies": {
     "bulk-require": "^1.0.0",
     "bulkify": "^1.4.2",
+    "depnest": "^1.0.2",
     "emoji-named-characters": "^1.0.2",
     "es2040": "^1.2.4",
+    "human-time": "0.0.1",
     "mutant": "^3.13.2",
     "pull-abortable": "^4.1.0",
     "pull-reconnect": "0.0.3",

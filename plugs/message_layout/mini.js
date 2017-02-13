@@ -3,7 +3,10 @@ const h = require('mutant/h')
 exports.needs = {
   message_backlinks: 'first',
   message_author: 'first',
-  message_meta: 'map'
+  message_meta: 'map',
+  message: {
+    timestamp: 'first'
+  }
 }
 
 exports.gives = {
@@ -21,6 +24,7 @@ exports.create = function (api) {
       classList: 'Message -mini'
     }, [
       h('header.author', {}, api.message_author(msg, { size: 'mini' })),
+      h('section.timestamp', {}, api.message.timestamp(msg)),
       h('section.meta', {}, api.message_meta(msg)),
       h('section.content', {}, opts.content),
       h('section.raw-content')
