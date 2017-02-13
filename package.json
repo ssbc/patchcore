@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electro example",
     "rebuild": "npm rebuild --runtime=electron --target=$(electron -v) --abi=$(electron --abi) --disturl=https://atom.io/download/atom-shell",
-    "test": "tape test"
+    "test": "standard"
   },
   "repository": {
     "type": "git",
@@ -51,6 +51,7 @@
   "devDependencies": {
     "depject": "github:dominictarr/depject#reduce-with-context",
     "electro": "^2.0.3",
-    "insert-css": "^2.0.0"
+    "insert-css": "^2.0.0",
+    "standard": "^8.6.0"
   }
 }
