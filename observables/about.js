@@ -1,13 +1,16 @@
-var {Value, Struct} = require('mutant')
+var {Value, Struct, computed} = require('mutant')
 var Abortable = require('pull-abortable')
 var pull = require('pull-stream')
+var msgs = require('ssb-msgs')
 
 exports.needs = {
-  sbot_user_feed: 'first'
+  sbot_user_feed: 'first',
+  blob_url: 'first'
 }
 exports.gives = {
   obs_about_name: true,
-  obs_about_image: true
+  obs_about_image: true,
+  obs_about_image_url: true
 }
 
 exports.create = function (api) {
@@ -15,7 +18,15 @@ exports.create = function (api) {
 
   return {
     obs_about_name: (id) => get(id).displayName,
-    obs_about_image: (id) => get(id).image
+    obs_about_image: (id) => get(id).image,
+    obs_about_image_url: (id) => {
+      return computed(get(id).image, (image) => {
+        var obj = msgs.link(image, 'blob')
+        if (obj) {
+          return api.blob_url(obj.link)
+        }
+      })
+    }
   }
 
   function get (id) {
