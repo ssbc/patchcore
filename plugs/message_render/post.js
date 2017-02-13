@@ -18,11 +18,13 @@ exports.create = function (api) {
 
   function message_render (msg) {
     if (msg.value.content.type !== 'post') return
-    return api.message_layout(msg, {
+    var element = api.message_layout(msg, {
       title: message_title(msg),
       content: message_content(msg),
       layout: 'default'
     })
+
+    return api.message_decorate(element, { msg })
   }
 
   function message_content (data) {
