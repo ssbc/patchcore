@@ -1,7 +1,7 @@
 const pull = require('pull-stream')
 
 exports.gives = {
-  feeds: {
+  streams: {
     private: true
   }
 }
@@ -13,7 +13,7 @@ exports.needs = {
 
 exports.create = function (api) {
   return {
-    feeds: {
+    streams: {
       'private': function (opts) {
         pull(
           api.sbot_log(opts)//,

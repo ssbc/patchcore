@@ -19,7 +19,7 @@ exports.create = function (api) {
     if (msg.value.content.type !== 'vote') return
     return api.message_layout(msg, {
       content: render_vote(msg),
-      mini: true
+      layout: 'mini'
     })
   }
 

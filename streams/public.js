@@ -1,5 +1,5 @@
 exports.gives = {
-  feeds: {
+  streams: {
     public: true
   }
 }
@@ -10,7 +10,7 @@ exports.needs = {
 
 exports.create = function (api) {
   return {
-    feeds: {
+    streams: {
       public: api.sbot_log
     }
   }

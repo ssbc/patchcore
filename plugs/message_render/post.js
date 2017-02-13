@@ -1,6 +1,7 @@
 var h = require('mutant/h')
 
 exports.needs = {
+  message_decorate: 'reduce',
   message_layout: 'first',
   message_link: 'first',
   markdown: 'first'
@@ -20,7 +21,7 @@ exports.create = function (api) {
     return api.message_layout(msg, {
       title: message_title(msg),
       content: message_content(msg),
-      mini: false
+      layout: 'default'
     })
   }
 

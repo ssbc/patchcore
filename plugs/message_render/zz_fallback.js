@@ -16,7 +16,7 @@ exports.create = function (api) {
   function message_render (msg) {
     return api.message_layout(msg, {
       content: message_content(msg),
-      mini: true
+      layout: 'mini'
     })
   }
 

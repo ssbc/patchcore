@@ -16,7 +16,7 @@ var api = entry(combine(modules))
 require('insert-css')(fs.readFileSync(__dirname + '/styles.css', 'utf8'))
 
 var app = h('div.App', [
-  api.render_feed(api.feeds.public)
+  api.render_feed(api.streams.public)
 ])
 
 document.head.appendChild(h('title', 'PATCHCORE :: Example'))
@@ -25,8 +25,8 @@ document.body.appendChild(app)
 function entry (sockets) {
   return {
     render_feed: apply.first(sockets.render_feed),
-    feeds: {
-      public: apply.first(sockets.feeds.public)
+    streams: {
+      public: apply.first(sockets.streams.public)
     }
   }
 }
