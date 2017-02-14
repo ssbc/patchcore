@@ -25,3 +25,7 @@ body {
   right: 20px;
   top: 20px;
 }
+
+.Message > section.actions > a {
+  margin-right: 5px
+}

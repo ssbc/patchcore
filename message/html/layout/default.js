@@ -25,7 +25,7 @@ exports.create = (api) => {
       h('section.meta', {}, api.message.html.meta(msg)),
       h('section.content', {}, opts.content),
       h('section.raw-content'),
-      h('section.action', {}, api.message.html.action(msg)),
+      h('section.actions', {}, api.message.html.action(msg)),
       h('footer.backlinks', {}, api.message.html.backlinks(msg))
     ])
   }
