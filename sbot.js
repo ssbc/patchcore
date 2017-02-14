@@ -15,6 +15,7 @@ exports.needs = {
 exports.gives = {
   sbot_log: true,
   sbot_get: true,
+  sbot_feed: true,
   sbot_user_feed: true,
   sbot_query: true,
   sbot_publish: true,
@@ -109,6 +110,14 @@ exports.create = function (api) {
       return pull(
         sbot.createLogStream(opts),
         pull.through(e => {
+          CACHE[e.key] = CACHE[e.key] || e.value
+        })
+      )
+    }),
+    sbot_feed: rec.source(function (opts) {
+      return pull(
+        sbot.createFeedStream(opts),
+        pull.through(function (e) {
           CACHE[e.key] = CACHE[e.key] || e.value
         })
       )
