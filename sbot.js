@@ -117,20 +117,20 @@ exports.create = function (api) {
           })
         })
       },
-      feed: rec.source(function (opts) {
-        return pull(
-          sbot.createFeedStream(opts),
-          pull.through(function (e) {
-            CACHE[e.key] = CACHE[e.key] || e.value
-          })
-        )
-      }),
       pull: {
         query: rec.source(query => {
           return sbot.query.read(query)
         }),
         userFeed: rec.source(opts => {
           return sbot.createUserStream(opts)
+        }),
+        feed: rec.source(function (opts) {
+          return pull(
+            sbot.createFeedStream(opts),
+            pull.through(function (e) {
+              CACHE[e.key] = CACHE[e.key] || e.value
+            })
+          )
         }),
         log: rec.source(opts => {
           return pull(
