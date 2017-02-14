@@ -5,6 +5,6 @@ exports.gives = nest('message.html.action')
 
 exports.create = (api) => {
   return nest('message.html.action', function reply (msg) {
-    return h('a', { href: '#' + msg.key }, 'Reply')
+    return h('a', { href: msg.key }, 'Reply')
   })
 }

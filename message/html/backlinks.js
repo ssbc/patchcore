@@ -32,7 +32,7 @@ exports.create = function (api) {
       api.message.async.name(link, (err, name) => {
         if (err) throw err
         hrefList.appendChild(h('li', [
-          h('a -backlink', { href: `#${link}` }, name)
+          h('a -backlink', { href: link }, name)
         ]))
       })
     })

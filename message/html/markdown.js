@@ -29,9 +29,9 @@ exports.create = function (api) {
       emoji: renderEmoji,
       toUrl: (id) => {
         if (ref.isBlob(id)) return api.blob.sync.url(id)
-        return '#' + (mentions[id] ? mentions[id] : id)
+        return (mentions[id] ? mentions[id] : id)
       },
-      imageLink: (id) => '#' + id
+      imageLink: (id) => id
     })
 
     return md
