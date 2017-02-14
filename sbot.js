@@ -7,6 +7,7 @@ var nest = require('depnest')
 var Value = require('mutant/value')
 
 var cache = CACHE = {}
+var ssbKeys = require('ssb-keys')
 
 exports.needs = nest({
   'config.sync.load': 'first',
