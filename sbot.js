@@ -5,8 +5,6 @@ var createClient = require('ssb-client')
 var createFeed = require('ssb-feed')
 var nest = require('depnest')
 var Value = require('mutant/value')
-
-var cache = CACHE = {}
 var ssbKeys = require('ssb-keys')
 
 exports.needs = nest({
@@ -17,6 +15,9 @@ exports.needs = nest({
 
 exports.gives = {
   sbot: {
+    sync: {
+      cache: true
+    },
     async: {
       get: true,
       publish: true
@@ -36,6 +37,7 @@ exports.gives = {
 exports.create = function (api) {
   const config = api.config.sync.load()
   const keys = api.keys.sync.load()
+  var cache = {}
 
   var sbot = null
   var connectionStatus = Value()
@@ -83,16 +85,20 @@ exports.create = function (api) {
 
   return {
     sbot: {
+      sync: {
+        cache: () => cache
+      },
       async: {
         get: rec.async(function (key, cb) {
           if (typeof cb !== 'function') {
             throw new Error('cb must be function')
           }
-          if (CACHE[key]) cb(null, CACHE[key])
+          if (cache[key]) cb(null, cache[key])
           else {
             sbot.get(key, function (err, value) {
               if (err) return cb(err)
-              cb(null, CACHE[key] = value)
+              runHooks({key, value})
+              cb(null, value)
             })
           }
         }),
@@ -128,23 +134,27 @@ exports.create = function (api) {
         feed: rec.source(function (opts) {
           return pull(
             sbot.createFeedStream(opts),
-            pull.through(function (e) {
-              CACHE[e.key] = CACHE[e.key] || e.value
-            })
+            pull.through(runHooks)
           )
         }),
         log: rec.source(opts => {
           return pull(
             sbot.createLogStream(opts),
-            pull.through(e => {
-              CACHE[e.key] = CACHE[e.key] || e.value
-            })
+            pull.through(runHooks)
           )
         })
       },
       obs: {
         connectionStatus: (listener) => connectionStatus(listener)
       }
+    }
+  }
+
+  // scoped
+
+  function runHooks (msg) {
+    if (!cache[msg.key]) {
+      cache[msg.key] = msg.value
     }
   }
 }
