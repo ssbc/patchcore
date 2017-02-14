@@ -30,7 +30,9 @@ exports.gives = {
       feed: true
     },
     obs: {
-      connectionStatus: true
+      connectionStatus: true,
+      connectedPeers: true,
+      localPeers: true
     }
   }
 }
@@ -42,6 +44,10 @@ exports.create = function (api) {
 
   var sbot = null
   var connectionStatus = Value()
+  var connectedPeers = Value([])
+  var localPeers = Value([])
+
+  setInterval(refreshPeers, 5e3)
 
   var rec = {
     sync: () => {},
@@ -146,7 +152,9 @@ exports.create = function (api) {
         })
       },
       obs: {
-        connectionStatus: (listener) => connectionStatus(listener)
+        connectionStatus: (listener) => connectionStatus(listener),
+        connectedPeers: () => connectedPeers,
+        localPeers: () => localPeers
       }
     }
   }
@@ -157,6 +165,22 @@ exports.create = function (api) {
     if (!cache[msg.key]) {
       cache[msg.key] = msg.value
       api.sbot.hook.feed(msg)
+    }
+  }
+
+  function refreshPeers () {
+    if (connectionStatus() === null) { // wat!?
+      sbot.gossip.peers((err, peers) => {
+        if (err) throw console.log(err)
+        connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
+      })
+      if (sbot.local && sbot.local.list) {
+        sbot.local.list((err, keys) => {
+          if (!err) {
+            localPeers.set(keys)
+          }
+        })
+      }
     }
   }
 }
