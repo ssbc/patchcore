@@ -10,7 +10,8 @@ var ssbKeys = require('ssb-keys')
 exports.needs = nest({
   'config.sync.load': 'first',
   'keys.sync.load': 'first',
-  'sbot.obs.connectionStatus': 'first'
+  'sbot.obs.connectionStatus': 'first',
+  'sbot.hook.feed': 'map'
 })
 
 exports.gives = {
@@ -155,6 +156,7 @@ exports.create = function (api) {
   function runHooks (msg) {
     if (!cache[msg.key]) {
       cache[msg.key] = msg.value
+      api.sbot.hook.feed(msg)
     }
   }
 }
