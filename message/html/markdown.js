@@ -24,7 +24,7 @@ exports.create = function (api) {
       })
     }
 
-    var md = h('Markdown')
+    var md = h('div', {className: 'Markdown'})
     md.innerHTML = renderer.block(content.text, {
       emoji: renderEmoji,
       toUrl: (id) => {
