@@ -4,13 +4,14 @@ const nest = require('depnest')
 exports.gives = nest('feed.pull.private')
 exports.needs = nest({
   'sbot.pull.log': 'first',
-  // 'message.sync.unbox': 'first'
+  'message.sync.unbox': 'first'
 })
+
 exports.create = function (api) {
   return nest('feed.pull.private', function (opts) {
-    pull(
-      api.sbot_log(opts)//,
-      // unbox()
+    return pull(
+      api.sbot.pull.log(opts),
+      unbox()
     )
   })
 
