@@ -173,14 +173,8 @@ exports.create = function (api) {
       sbot.gossip.peers((err, peers) => {
         if (err) throw console.log(err)
         connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
+        localPeers.set(peers.filter(x => x.source === 'local').map(x => x.key))
       })
-      if (sbot.local && sbot.local.list) {
-        sbot.local.list((err, keys) => {
-          if (!err) {
-            localPeers.set(keys)
-          }
-        })
-      }
     }
   }
 }
