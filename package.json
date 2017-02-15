@@ -41,6 +41,7 @@
     "ssb-markdown": "^3.2.1",
     "ssb-ref": "^2.6.2",
     "visualize-buffer": "0.0.1"
+    "xtend": "^4.0.1"
   },
   "browserify": {
     "transform": [

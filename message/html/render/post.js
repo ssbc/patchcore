@@ -1,5 +1,6 @@
 var h = require('mutant/h')
 var nest = require('depnest')
+var extend = require('xtend')
 
 exports.needs = nest({
   'message.html': {
@@ -13,13 +14,13 @@ exports.needs = nest({
 exports.gives = nest('message.html.render')
 
 exports.create = function (api) {
-  return nest('message.html.render', function renderMessage (msg) {
+  return nest('message.html.render', function renderMessage (msg, opts) {
     if (msg.value.content.type !== 'post') return
-    var element = api.message.html.layout(msg, {
+    var element = api.message.html.layout(msg, extend({
       title: messageTitle(msg),
       content: messageContent(msg),
       layout: 'default'
-    })
+    }, opts))
 
     return api.message.html.decorate(element, { msg })
   })
