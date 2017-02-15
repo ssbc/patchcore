@@ -1,6 +1,11 @@
 const nest = require('depnest')
+const getAvatar = require('ssb-avatar')
 
-exports.needs = nest('sbot.async.get', 'first')
+exports.needs = nest({
+  'sbot.async.get': 'first',
+  'sbot.pull.links': 'first',
+  'keys.sync.id': 'first'
+})
 exports.gives = nest('message.async.name')
 
 // needs an async version
@@ -17,11 +22,22 @@ exports.create = function (api) {
         }
       } else if (typeof value.content.text === 'string') {
         return cb(null, value.content.type + ': ' + titleFromMarkdown(value.content.text, 30))
+      } else {
+        getAboutName(id, cb)
       }
 
       return cb(null, fallbackName)
     })
   })
+
+  function getAboutName (id, cb) {
+    getAvatar({
+      links: api.sbot.pull.links,
+      get: api.sbot.async.get
+    }, api.keys.sync.id(), id, function (_, avatar) {
+      cb(null, avatar && avatar.name || id.substring(0, 10) + '...')
+    })
+  }
 }
 
 function titleFromMarkdown (text, max) {
