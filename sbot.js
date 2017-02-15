@@ -169,7 +169,7 @@ exports.create = function (api) {
   }
 
   function refreshPeers () {
-    if (connectionStatus() === null) { // wat!?
+    if (sbot) {
       sbot.gossip.peers((err, peers) => {
         if (err) throw console.log(err)
         connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
