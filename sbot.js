@@ -27,7 +27,8 @@ exports.gives = {
       log: true,
       userFeed: true,
       query: true,
-      feed: true
+      feed: true,
+      links: true
     },
     obs: {
       connectionStatus: true,
@@ -149,6 +150,9 @@ exports.create = function (api) {
             sbot.createLogStream(opts),
             pull.through(runHooks)
           )
+        }),
+        links: rec.source(function (query) {
+          return sbot.links(query)
         })
       },
       obs: {
