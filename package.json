@@ -26,6 +26,7 @@
   "dependencies": {
     "bulk-require": "^1.0.0",
     "bulkify": "^1.4.2",
+    "color-hash": "^1.0.3",
     "depnest": "^1.0.2",
     "emoji-named-characters": "^1.0.2",
     "es2040": "^1.2.4",
@@ -44,7 +45,6 @@
     "ssb-markdown": "^3.2.1",
     "ssb-ref": "^2.6.2",
     "ssb-sort": "^1.0.0",
-    "visualize-buffer": "0.0.1",
     "xtend": "^4.0.1"
   },
   "browserify": {

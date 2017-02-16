@@ -1,19 +1,24 @@
-var {Value, Struct, computed} = require('mutant')
-var Abortable = require('pull-abortable')
+var {Value, Struct, Dict, computed} = require('mutant')
+var pullPause = require('pull-pause')
 var pull = require('pull-stream')
 var msgs = require('ssb-msgs')
-var visualize = require('visualize-buffer')
 var nest = require('depnest')
+var colorHash = new (require('color-hash'))()
 
 exports.needs = nest({
-  'sbot.pull.userFeed': 'first',
-  'blob.sync.url': 'first'
+  'sbot.pull.links': 'first',
+  'blob.sync.url': 'first',
+  'keys.sync.id': 'first'
 })
 exports.gives = nest({
   'about.obs': [
     'name',
+    'description',
     'image',
-    'imageUrl'
+    'imageUrl',
+    'names',
+    'images',
+    'color'
   ]
 })
 
@@ -23,8 +28,13 @@ exports.create = function (api) {
   return nest({
     'about.obs': {
       name: (id) => get(id).displayName,
+      description: (id) => get(id).description,
       image: (id) => get(id).image,
-      imageUrl: (id) => get(id).imageUrl
+      imageUrl: (id) => get(id).imageUrl,
+
+      names: (id) => get(id).names,
+      images: (id) => get(id).images,
+      color: (id) => computed(id, (id) => colorHash.hex(id))
     }
   })
 
@@ -37,69 +47,93 @@ exports.create = function (api) {
 }
 
 function About (api, id) {
-  // naive about that only looks at what a feed asserts about itself
+  var pauser = pullPause((paused) => {})
 
-  var fallbackImageUrl = genImage(id)
+  // transparent image
+  var fallbackImageUrl = 'data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
+
+  var sync = Value(false)
+  var yourId = api.keys.sync.id()
 
   var obs = Struct({
-    displayName: Value(id.slice(1, 10)),
-    image: Value(genImage(id))
+    assignedNames: Dict(),
+    assignedImages: Dict(),
+    assignedDescriptions: Dict()
+  }, {
+    onListen: pauser.resume,
+    onUnlisten: pauser.pause
   })
 
-  obs.imageUrl = computed(obs.image, (image) => {
-    var obj = msgs.link(image, 'blob')
-    if (obj) {
-      return api.blob.sync.url(obj.link)
+  obs.sync = computed([sync, obs], (v) => v)
+  obs.displayName = computed([obs.assignedNames, id, yourId, id.slice(1, 10)], socialValue)
+  obs.description = computed([obs.assignedDescriptions, id, yourId], socialValue)
+  obs.image = computed([obs.assignedImages, id, yourId], socialValue)
+
+  obs.names = computed(obs.assignedNames, indexByValue)
+  obs.images = computed(obs.assignedImages, indexByValue)
+
+  obs.imageUrl = computed(obs.image, (blobId) => {
+    if (blobId) {
+      return api.blob.sync.url(blobId)
     } else {
       return fallbackImageUrl
     }
   })
 
-  var hasName = false
-  var hasImage = false
-
-  var abortable = Abortable()
-
-  // search history
   pull(
-    api.sbot.pull.userFeed({reverse: true, id}),
-    abortable,
-    pull.drain(function (item) {
-      update(item)
-      if (hasName && obs.image()) {
-        abortable.abort()
+    api.sbot.pull.links({dest: id, rel: 'about', values: true, live: true}),
+    pauser,
+    pull.drain(function (msg) {
+      if (msg.sync) {
+        sync.set(true)
+      } else {
+        if (msg.value.content.name) {
+          obs.assignedNames.put(msg.value.author, msg.value.content.name)
+        }
+        if (msg.value.content.image) {
+          var obj = msgs.link(msg.value.content.image, 'blob')
+          if (obj && obj.link) {
+            obs.assignedImages.put(msg.value.author, obj.link)
+          }
+        }
+        if (msg.value.content.description) {
+          obs.assignedDescriptions.put(msg.value.author, msg.value.content.description)
+        }
       }
+    }, () => {
+      sync.set(true)
     })
   )
 
-  // get live changes
-  pull(
-    api.sbot.pull.userFeed({old: false, id}),
-    pull.drain(update)
-  )
-
   return obs
-
-  // scoped
-
-  function update (item) {
-    if (item.value && item.value.content.type === 'about' && item.value.content.about === id) {
-      if (item.value.content.name) {
-        if (!hasName || hasName < item.value.timestamp) {
-          hasName = item.value.timestamp
-          obs.displayName.set(item.value.content.name)
-        }
-      }
-      if (item.value.content.image) {
-        if (!hasImage || hasImage < item.value.timestamp) {
-          hasImage = item.value.timestamp
-          obs.image.set(item.value.content.image)
-        }
-      }
-    }
-  }
 }
 
-function genImage (id) {
-  return visualize(new Buffer(id.substring(1), 'base64'), 256).src
+function socialValue (lookup, id, yourId, fallback) {
+  return lookup[yourId] || lookup[id] || highestRank(lookup) || fallback || null
+}
+
+function highestRank (lookup) {
+  var indexed = indexByValue(lookup)
+  var highestCount = 0
+  var currentHighest = null
+  Object.keys(indexed).forEach((item) => {
+    var count = indexed[item].length
+    if (count > highestCount) {
+      highestCount = count
+      currentHighest = item
+    }
+  })
+  return currentHighest
+}
+
+function indexByValue (lookup) {
+  var result = {}
+  Object.keys(lookup).forEach((key) => {
+    var value = lookup[key]
+    if (!result[value]) {
+      result[value] = []
+    }
+    result[value].push(key)
+  })
+  return result
 }
