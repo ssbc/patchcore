@@ -6,7 +6,7 @@ exports.needs = nest({
 })
 
 exports.gives = nest({
-  'profile.obs': ['following', 'followers']
+  'contact.obs': ['following', 'followers']
 })
 
 exports.create = function (api) {
@@ -14,7 +14,7 @@ exports.create = function (api) {
   var followerCache = {}
 
   return nest({
-    'profile.obs': { following, followers }
+    'contact.obs': { following, followers }
   })
 
   function following (id) {
