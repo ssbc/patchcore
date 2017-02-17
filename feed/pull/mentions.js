@@ -25,15 +25,15 @@ exports.create = function (api) {
         pull.filter((msg) => {
           if (!msg) return false
           if (msg.sync) return true
-          return msg.value.author !== id && (
-            belongsToUs(msg.value.content.mentions) ||
-            belongsToUs(msg.value.content.root) ||
-            belongsToUs(msg.value.content.branch) ||
-            belongsToUs(msg.value.content.repo) ||
-            belongsToUs(msg.value.content.vote) ||
-            belongsToUs(msg.value.content.about) ||
-            belongsToUs(msg.value.content.contact)
-          )
+          return msg.value.author !== id && belongsToUs([
+            msg.value.content.mentions,
+            msg.value.content.root,
+            msg.value.content.branch,
+            msg.value.content.repo,
+            msg.value.content.vote,
+            msg.value.content.about,
+            msg.value.content.contact
+          ])
         }),
         pull.through(x => console.log())
       )
@@ -45,20 +45,6 @@ exports.create = function (api) {
         )
       } else {
         return stream
-      }
-    }
-
-    function linksToUs (ids) {
-      if (ids) {
-        if (Array.isArray(ids)) {
-          return ids.some((item) => {
-            if (item) {
-              return item === id || item.link === id
-            }
-          })
-        } else {
-          return ids === id
-        }
       }
     }
 
