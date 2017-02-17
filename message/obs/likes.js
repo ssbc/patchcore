@@ -1,6 +1,10 @@
 var nest = require('depnest')
 var { Value, computed } = require('mutant')
 
+exports.needs = nest({
+  'message.sync.unbox': 'first'
+})
+
 exports.gives = nest({
   'sbot.hook.feed': true,
   'message.obs.likes': true
@@ -10,7 +14,10 @@ exports.create = function (api) {
   var likesLookup = {}
   return nest({
     'sbot.hook.feed': (msg) => {
-      if (msg.key && msg.value && msg.value.content) {
+      if (msg.value && typeof msg.value.content === 'string') {
+        msg = api.message.sync.unbox(msg)
+      }
+      if (msg && msg.value && msg.value.content) {
         var c = msg.value.content
         if (c.type === 'vote') {
           if (msg.value.content.vote && msg.value.content.vote.link) {
