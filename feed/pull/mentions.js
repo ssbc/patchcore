@@ -26,7 +26,7 @@ exports.create = function (api) {
           if (!msg) return false
           if (msg.sync) return true
           return msg.value.author !== id && (
-            linksToUs(msg.value.content.mentions) ||
+            belongsToUs(msg.value.content.mentions) ||
             belongsToUs(msg.value.content.root) ||
             belongsToUs(msg.value.content.branch) ||
             belongsToUs(msg.value.content.repo) ||
@@ -63,6 +63,9 @@ exports.create = function (api) {
     }
 
     function belongsToUs (link) {
+      if (Array.isArray(link)) {
+        return link.some(belongsToUs)
+      }
       if (link) {
         link = typeof link === 'object' ? link.link : link
         if (link === id) return true
