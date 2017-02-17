@@ -32,7 +32,7 @@
     "es2040": "^1.2.4",
     "human-time": "0.0.1",
     "mutant": "^3.14.2",
-    "mutant-pull-reduce": "^1.0.0",
+    "mutant-pull-reduce": "^1.0.1",
     "pull-abortable": "^4.1.0",
     "pull-cat": "^1.1.11",
     "pull-reconnect": "0.0.3",
