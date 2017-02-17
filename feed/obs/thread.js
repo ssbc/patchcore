@@ -7,7 +7,8 @@ var { dictToCollection, map, computed, Struct } = require('mutant')
 exports.needs = nest({
   'sbot.pull.links': 'first',
   'sbot.async.get': 'first',
-  'lib.obs.pullLookup': 'first'
+  'lib.obs.pullLookup': 'first',
+  'message.sync.unbox': 'first'
 })
 
 exports.gives = nest('feed.obs.thread')
@@ -25,7 +26,8 @@ exports.create = function (api) {
       pullCat([
         rootMessageStream,
         api.sbot.pull.links({ rel: 'root', dest: rootId, keys: true, values: true, live: true })
-      ])
+      ]),
+      unboxIfNeeded()
     ), 'key')
 
     var orderedIds = computed(messageLookup, (lookup) => {
@@ -49,6 +51,16 @@ exports.create = function (api) {
 
     return result
   })
+
+  function unboxIfNeeded () {
+    return pull.map(function (msg) {
+      if (msg.sync || (msg.value && typeof msg.value.content === 'object')) {
+        return msg
+      } else {
+        return api.message.sync.unbox(msg)
+      }
+    })
+  }
 }
 
 function getKey (msg) {
