@@ -2,7 +2,7 @@ var nest = require('depnest')
 var pull = require('pull-stream')
 var pullCat = require('pull-cat')
 var sort = require('ssb-sort')
-var { dictToCollection, map, computed, Struct } = require('mutant')
+var { map, computed } = require('mutant')
 
 exports.needs = nest({
   'sbot.pull.links': 'first',
