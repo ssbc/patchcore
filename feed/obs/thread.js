@@ -14,7 +14,7 @@ exports.needs = nest({
 exports.gives = nest('feed.obs.thread')
 
 exports.create = function (api) {
-  return nest('feed.obs.thread', function (rootId) {
+  return nest('feed.obs.thread', function (rootId, {branch}) {
     var rootMessageStream = pull(
       pull.values([rootId]),
       pull.asyncMap((key, cb) => {
@@ -25,7 +25,7 @@ exports.create = function (api) {
     var messageLookup = api.lib.obs.pullLookup(pull(
       pullCat([
         rootMessageStream,
-        api.sbot.pull.links({ rel: 'root', dest: rootId, keys: true, values: true, live: true })
+        api.sbot.pull.links({ rel: branch ? 'branch' : 'root', dest: rootId, keys: true, values: true, live: true })
       ]),
       unboxIfNeeded()
     ), 'key')
@@ -39,19 +39,29 @@ exports.create = function (api) {
       return messageLookup.get(id)
     })
 
-    var result = Struct({
-      rootId, messages
-    })
-
-    result.lastId = computed(messages, (messages) => {
-      var last = messages[messages.length - 1]
-      if (last) {
-        return last.key
+    var result = {
+      messages,
+      lastId: computed(messages, (messages) => {
+        var last = messages[messages.length - 1]
+        if (last) {
+          return last.key
+        }
+      }),
+      rootId: computed(messages, (messages) => {
+        if (branch && messages.length) {
+          return messages[0].value.content.root
+        } else {
+          return rootId
+        }
+      }),
+      branchId: computed(messages, (messages) => {
+        if (branch) {
+          return rootId
+        }
+      }),
+      previousKey: function (msg) {
+        return PreviousKey(result.messages, msg)
       }
-    })
-
-    result.previousKey = function (msg) {
-      return PreviousKey(result.messages, msg)
     }
 
     result.sync = messageLookup.sync
