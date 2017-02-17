@@ -43,6 +43,13 @@ exports.create = function (api) {
       rootId, messages
     })
 
+    result.lastId = computed(messages, (messages) => {
+      var last = messages[messages.length - 1]
+      if (last) {
+        return last.key
+      }
+    })
+
     result.previousKey = function (msg) {
       return PreviousKey(result.messages, msg)
     }
