@@ -21,7 +21,8 @@ exports.gives = {
     },
     async: {
       get: true,
-      publish: true
+      publish: true,
+      addBlob: true
     },
     pull: {
       log: true,
@@ -49,12 +50,6 @@ exports.create = function (api) {
   var localPeers = Value([])
 
   setInterval(refreshPeers, 5e3)
-
-  var rec = {
-    sync: () => {},
-    async: () => {},
-    source: () => {}
-  }
 
   var rec = Reconnect(function (isConn) {
     function notify (value) {
@@ -130,6 +125,29 @@ exports.create = function (api) {
             else if (!cb) console.log(msg)
             cb && cb(err, msg)
           })
+        }),
+        addBlob: rec.async((stream, cb) => {
+          return pull(
+            stream,
+            Hash(function (err, id) {
+              if (err) return cb(err)
+              // completely UGLY hack to tell when the blob has been sucessfully written...
+              var start = Date.now()
+              var n = 5
+              next()
+
+              function next () {
+                setTimeout(function () {
+                  sbot.blobs.has(id, function (_, has) {
+                    if (has) return cb(null, id)
+                    if (n--) next()
+                    else cb(new Error('write failed'))
+                  })
+                }, Date.now() - start)
+              }
+            }),
+            sbot.blobs.add()
+          )
         })
       },
       pull: {
@@ -181,4 +199,19 @@ exports.create = function (api) {
       })
     }
   }
+}
+
+function Hash (onHash) {
+  var buffers = []
+  return pull.through(function (data) {
+    buffers.push(typeof data === 'string'
+      ? new Buffer(data, 'utf8')
+      : data
+    )
+  }, function (err) {
+    if (err && !onHash) throw err
+    var b = buffers.length > 1 ? Buffer.concat(buffers) : buffers[0]
+    var h = '&' + ssbKeys.hash(b)
+    onHash && onHash(err, h)
+  })
 }
