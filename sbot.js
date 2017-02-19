@@ -31,6 +31,7 @@ exports.gives = {
       query: true,
       feed: true,
       links: true,
+      search: true
     },
     obs: {
       connectionStatus: true,
@@ -175,6 +176,9 @@ exports.create = function (api) {
         }),
         links: rec.source(function (query) {
           return sbot.links(query)
+        }),
+        search: rec.source(function (opts) {
+          return sbot.fulltext.search(opts)
         })
       },
       obs: {
