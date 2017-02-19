@@ -22,14 +22,15 @@ exports.gives = {
     async: {
       get: true,
       publish: true,
-      addBlob: true
+      addBlob: true,
+      gossipConnect: true
     },
     pull: {
       log: true,
       userFeed: true,
       query: true,
       feed: true,
-      links: true
+      links: true,
     },
     obs: {
       connectionStatus: true,
@@ -148,6 +149,9 @@ exports.create = function (api) {
             }),
             sbot.blobs.add()
           )
+        }),
+        gossipConnect: rec.async(function (opts, cb) {
+          sbot.gossip.connect(opts, cb)
         })
       },
       pull: {
