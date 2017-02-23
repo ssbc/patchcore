@@ -7,6 +7,7 @@ exports.create = (api) => {
   return nest('config.sync.load', () => {
     if (!config) {
       config = Config(process.env.ssb_appname)
+      config.manifest = require('./manifest.json')
     }
     return config
   })

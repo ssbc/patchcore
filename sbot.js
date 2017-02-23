@@ -58,11 +58,7 @@ exports.create = function (api) {
       isConn(value); connectionStatus.set(value)
     }
 
-    createClient(keys, {
-      manifest: require('./manifest.json'),
-      remote: config.remote,
-      caps: config.caps
-    }, function (err, _sbot) {
+    createClient(keys, config, function (err, _sbot) {
       if (err) {
         return notify(err)
       }
