@@ -18,6 +18,13 @@
     "client"
   ],
   "author": "Secure Scuttlebutt Consortium",
+  "maintainers": [
+    "ahdinosaur",
+    "cel",
+    "dominictarr",
+    "mixmix",
+    "mmckegg"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ssbc/patchcore/issues"
