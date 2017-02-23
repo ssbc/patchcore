@@ -6,14 +6,14 @@ var throttle = require('mutant/throttle')
 var nest = require('depnest')
 var hr = 60 * 60 * 1000
 
+exports.gives = nest('feed.obs.recent')
+
 exports.needs = nest({
   'sbot.pull.log': 'first'
 })
 
-exports.gives = nest('profile.obs.recentlyUpdated')
-
 exports.create = function (api) {
-  return nest('profile.obs.recentlyUpdated', function (limit) {
+  return nest('feed.obs.recent', function (limit) {
     var stream = pull(
       pullCat([
         api.sbot.pull.log({reverse: true, limit: limit || 500}),
