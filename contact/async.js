@@ -2,13 +2,20 @@ var nest = require('depnest')
 var pull = require('pull-stream')
 
 exports.needs = nest({
-  'sbot.pull.query': 'first'
+  'sbot.pull.query': 'first',
+  'sbot.async.publish': 'first'
 })
 
-exports.gives = nest('contact.async.followerOf')
+exports.gives = nest({
+  'contact.async': ['follow', 'unfollow', 'followerOf']
+})
 
 exports.create = function (api) {
-  return nest('contact.async.followerOf', function (source, dest, cb) {
+  return nest({
+    'contact.async': {follow, unfollow, followerOf}
+  })
+
+  function followerOf (source, dest, cb) {
     pull(
       api.sbot.pull.query({query: [
         makeQuery(source, dest),
@@ -19,7 +26,23 @@ exports.create = function (api) {
         else cb(null, ary.pop()) // will be true, or undefined/false
       })
     )
-  })
+  }
+
+  function follow (id, cb) {
+    api.sbot.async.publish({
+      type: 'contact',
+      contact: id,
+      following: true
+    }, cb)
+  }
+
+  function unfollow (id, cb) {
+    api.sbot.async.publish({
+      type: 'contact',
+      contact: id,
+      following: false
+    }, cb)
+  }
 }
 
 function makeQuery (a, b) {
