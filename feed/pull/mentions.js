@@ -34,8 +34,7 @@ exports.create = function (api) {
             msg.value.content.about,
             msg.value.content.contact
           ])
-        }),
-        pull.through(x => console.log())
+        })
       )
 
       if (take) {
