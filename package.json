@@ -38,7 +38,7 @@
     "emoji-named-characters": "^1.0.2",
     "es2040": "^1.2.4",
     "human-time": "0.0.1",
-    "mutant": "^3.15.0",
+    "mutant": "^3.17.0",
     "mutant-pull-reduce": "^1.0.1",
     "pull-abortable": "^4.1.0",
     "pull-cat": "^1.1.11",
