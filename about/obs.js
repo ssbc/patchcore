@@ -19,7 +19,8 @@ exports.gives = nest({
     'names',
     'images',
     'color'
-  ]
+  ],
+  'sbot.hook.feed': true
 })
 
 exports.create = function (api) {
@@ -36,6 +37,21 @@ exports.create = function (api) {
       names: (id) => get(id).names,
       images: (id) => get(id).images,
       color: (id) => computed(id, (id) => colorHash.hex(id))
+    },
+    'sbot.hook.feed': function (msg) {
+      if (isAbout(msg) && msg.timestamp) {
+        var target = msg.value.content.about
+        var from = cache[target]
+        if (from) {
+          from.push({
+            author: msg.value.author,
+            timestamp: msg.timestamp,
+            name: msg.value.content.name,
+            image: msg.value.content.image,
+            description: msg.value.content.description
+          })
+        }
+      }
     }
   })
 
@@ -173,4 +189,8 @@ function indexByValue (lookup) {
     result[value].push(key)
   })
   return result
+}
+
+function isAbout (msg) {
+  return msg.value && msg.value.content && msg.value.content.type === 'about'
 }

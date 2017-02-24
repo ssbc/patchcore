@@ -6,7 +6,8 @@ exports.needs = nest({
 })
 
 exports.gives = nest({
-  'contact.obs': ['following', 'followers']
+  'contact.obs': ['following', 'followers'],
+  'sbot.hook.feed': true
 })
 
 exports.create = function (api) {
@@ -14,7 +15,18 @@ exports.create = function (api) {
   var followerCache = {}
 
   return nest({
-    'contact.obs': { following, followers }
+    'contact.obs': { following, followers },
+    'sbot.hook.feed': function (msg) {
+      if (isContact(msg) && msg.timestamp) {
+        var author = msg.value.author
+        var contact = msg.value.content.contact
+        var following = msg.value.content.following
+        var from = followingCache[author]
+        var to = followerCache[contact]
+        if (from) from.push({id: author, value: following, timestamp: msg.timestamp})
+        if (to) to.push({id: contact, value: following, timestamp: msg.timestamp})
+      }
+    }
   })
 
   function following (id) {
@@ -22,7 +34,11 @@ exports.create = function (api) {
       followingCache[id] = reduce(api.sbot.pull.query({
         query: [
           makeQuery(id, { $prefix: '@' }),
-          {'$map': ['value', 'content', 'contact']}
+          {'$map': {
+            id: ['value', 'content', 'contact'],
+            value: ['value', 'content', 'following'],
+            timestamp: 'timestamp'
+          }}
         ],
         live: true
       }))
@@ -35,7 +51,11 @@ exports.create = function (api) {
       followerCache[id] = reduce(api.sbot.pull.query({
         query: [
           makeQuery({ $prefix: '@' }, id),
-          {'$map': ['value', 'author']}
+          {'$map': {
+            id: ['value', 'author'],
+            value: ['value', 'content', 'following'],
+            timestamp: 'timestamp'
+          }}
         ],
         live: true
       }))
@@ -45,8 +65,18 @@ exports.create = function (api) {
 }
 
 function reduce (stream) {
+  var newestValue = 0
   return MutantPullReduce(stream, (result, item) => {
-    result.add(item)
+    if (newestValue < item.timestamp) {
+      newestValue = item.timestamp
+      if (item.value != null) {
+        if (item.value) {
+          result.add(item.id)
+        } else {
+          result.delete(item.id)
+        }
+      }
+    }
     return result
   }, {
     startValue: new Set()
@@ -59,9 +89,12 @@ function makeQuery (a, b) {
       author: a,
       content: {
         type: 'contact',
-        contact: b,
-        following: true
+        contact: b
       }
     }
   }}
+}
+
+function isContact (msg) {
+  return msg.value && msg.value.content && msg.value.content.type === 'contact'
 }
