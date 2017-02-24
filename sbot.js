@@ -31,7 +31,9 @@ exports.gives = {
       query: true,
       feed: true,
       links: true,
-      search: true
+      search: true,
+      replicateProgress: true,
+      queryProgress: true
     },
     obs: {
       connectionStatus: true,
@@ -175,6 +177,12 @@ exports.create = function (api) {
         }),
         search: rec.source(function (opts) {
           return sbot.fulltext.search(opts)
+        }),
+        replicateProgress: rec.source(function (opts) {
+          return sbot.replicate.changes()
+        }),
+        queryProgress: rec.source(function (opts) {
+          return sbot.query.progress()
         })
       },
       obs: {
