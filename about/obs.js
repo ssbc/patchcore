@@ -6,7 +6,7 @@ var nest = require('depnest')
 var colorHash = new (require('color-hash'))()
 
 exports.needs = nest({
-  'sbot.pull.links': 'first',
+  'sbot.pull.query': 'first',
   'blob.sync.url': 'first',
   'keys.sync.id': 'first'
 })
@@ -23,7 +23,8 @@ exports.gives = nest({
 })
 
 exports.create = function (api) {
-  var cache = {}
+  var sync = Value(false)
+  var cache = null
 
   return nest({
     'about.obs': {
@@ -39,21 +40,55 @@ exports.create = function (api) {
   })
 
   function get (id) {
+    if (!cache) {
+      cache = {}
+      pull(
+        api.sbot.pull.query({
+          query: [
+            {$filter: {
+              value: {
+                content: {
+                  type: 'about'
+                }
+              }
+            }},
+            {$map: {
+              timestamp: 'timestamp',
+              author: ['value', 'author'],
+              id: ['value', 'content', 'about'],
+              name: ['value', 'content', 'name'],
+              image: ['value', 'content', 'image'],
+              description: ['value', 'content', 'description']
+            }}
+          ],
+          live: true
+        }),
+        pull.drain(function (msg) {
+          if (msg.sync) {
+            sync.set(true)
+          } else if (msgs.isLink(msg.id, 'feed')) {
+            get(msg.id).push(msg)
+          }
+        }, () => {
+          sync.set(true)
+        })
+      )
+    }
     if (!cache[id]) {
-      cache[id] = About(api, id)
+      cache[id] = About(api, id, sync)
     }
     return cache[id]
   }
 }
 
-function About (api, id) {
+function About (api, id, sync) {
   var pauser = pullPause((paused) => {})
 
   // transparent image
   var fallbackImageUrl = 'data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
 
-  var sync = Value(false)
   var yourId = api.keys.sync.id()
+  var lastestTimestamps = {}
 
   var obs = Struct({
     assignedNames: Dict(),
@@ -80,32 +115,34 @@ function About (api, id) {
     }
   })
 
-  pull(
-    api.sbot.pull.links({dest: id, rel: 'about', values: true, live: true}),
-    pauser,
-    pull.drain(function (msg) {
-      if (msg.sync) {
-        sync.set(true)
-      } else {
-        if (msg.value.content.name) {
-          obs.assignedNames.put(msg.value.author, msg.value.content.name)
-        }
-        if (msg.value.content.image) {
-          var obj = msgs.link(msg.value.content.image, 'blob')
-          if (obj && obj.link) {
-            obs.assignedImages.put(msg.value.author, obj.link)
-          }
-        }
-        if (msg.value.content.description) {
-          obs.assignedDescriptions.put(msg.value.author, msg.value.content.description)
-        }
-      }
-    }, () => {
-      sync.set(true)
-    })
-  )
+  obs.push = push
 
   return obs
+
+  // scoped
+
+  function push (msg) {
+    if (!lastestTimestamps[msg.author]) {
+      lastestTimestamps[msg.author] = {
+        name: 0, image: 0, description: 0
+      }
+    }
+    if (msg.name && lastestTimestamps[msg.author].name < msg.timestamp) {
+      lastestTimestamps[msg.author].name = msg.timestamp
+      obs.assignedNames.put(msg.author, msg.name)
+    }
+    if (msg.image && lastestTimestamps[msg.author].image < msg.timestamp) {
+      lastestTimestamps[msg.author].image = msg.timestamp
+      var obj = msgs.link(msg.image, 'blob')
+      if (obj && obj.link) {
+        obs.assignedImages.put(msg.author, obj.link)
+      }
+    }
+    if (msg.description && lastestTimestamps[msg.author].description < msg.timestamp) {
+      lastestTimestamps[msg.author].description = msg.timestamp
+      obs.assignedDescriptions.put(msg.author, msg.description)
+    }
+  }
 }
 
 function socialValue (lookup, id, yourId, fallback) {
