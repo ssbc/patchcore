@@ -65,10 +65,11 @@ exports.create = function (api) {
 }
 
 function reduce (stream) {
-  var newestValue = 0
+  var newestValues = {}
   return MutantPullReduce(stream, (result, item) => {
-    if (newestValue < item.timestamp) {
-      newestValue = item.timestamp
+    newestValues[item.id] = newestValues[item.id] || 0
+    if (newestValues[item.id] < item.timestamp) {
+      newestValues[item.id] = item.timestamp
       if (item.value != null) {
         if (item.value) {
           result.add(item.id)
