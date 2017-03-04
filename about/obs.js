@@ -25,7 +25,8 @@ exports.gives = nest({
 
 exports.create = function (api) {
   var sync = Value(false)
-  var cache = null
+  var cache = {}
+  var cacheLoading = false
 
   return nest({
     'about.obs': {
@@ -56,44 +57,49 @@ exports.create = function (api) {
   })
 
   function get (id) {
-    if (!cache) {
-      cache = {}
-      pull(
-        api.sbot.pull.query({
-          query: [
-            {$filter: {
-              value: {
-                content: {
-                  type: 'about'
-                }
-              }
-            }},
-            {$map: {
-              timestamp: 'timestamp',
-              author: ['value', 'author'],
-              id: ['value', 'content', 'about'],
-              name: ['value', 'content', 'name'],
-              image: ['value', 'content', 'image'],
-              description: ['value', 'content', 'description']
-            }}
-          ],
-          live: true
-        }),
-        pull.drain(function (msg) {
-          if (msg.sync) {
-            sync.set(true)
-          } else if (msgs.isLink(msg.id, 'feed')) {
-            get(msg.id).push(msg)
-          }
-        }, () => {
-          sync.set(true)
-        })
-      )
+    if (!cacheLoading) {
+      cacheLoading = true
+      loadCache()
     }
     if (!cache[id]) {
       cache[id] = About(api, id, sync)
     }
     return cache[id]
+  }
+
+  function loadCache () {
+    pull(
+      api.sbot.pull.query({
+        query: [
+          {$filter: {
+            value: {
+              content: {
+                type: 'about'
+              }
+            }
+          }},
+          {$map: {
+            timestamp: 'timestamp',
+            author: ['value', 'author'],
+            id: ['value', 'content', 'about'],
+            name: ['value', 'content', 'name'],
+            image: ['value', 'content', 'image'],
+            description: ['value', 'content', 'description']
+          }}
+        ],
+        live: true
+      }),
+      pull.drain(
+        msg => {
+          if (msg.sync) {
+            sync.set(true)
+          } else if (msgs.isLink(msg.id, 'feed')) {
+            get(msg.id).push(msg)
+          }
+        },
+        () => sync.set(true)
+      )
+    )
   }
 }
 
