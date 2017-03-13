@@ -2,7 +2,8 @@ var nest = require('depnest')
 var MutantPullReduce = require('mutant-pull-reduce')
 
 exports.needs = nest({
-  'sbot.pull.query': 'first'
+  'sbot.pull.query': 'first',
+  'keys.sync.id': 'first'
 })
 
 exports.gives = nest({
@@ -23,8 +24,8 @@ exports.create = function (api) {
         var following = msg.value.content.following
         var from = followingCache[author]
         var to = followerCache[contact]
-        if (from) from.push({id: author, value: following, timestamp: msg.timestamp})
-        if (to) to.push({id: contact, value: following, timestamp: msg.timestamp})
+        if (from) from.push({id: contact, value: following, timestamp: msg.timestamp})
+        if (to) to.push({id: author, value: following, timestamp: msg.timestamp})
       }
     }
   })
