@@ -37,6 +37,7 @@ exports.gives = {
     },
     obs: {
       connectionStatus: true,
+      connection: true,
       connectedPeers: true,
       localPeers: true
     }
@@ -49,6 +50,7 @@ exports.create = function (api) {
   var cache = {}
 
   var sbot = null
+  var connection = Value()
   var connectionStatus = Value()
   var connectedPeers = Value([])
   var localPeers = Value([])
@@ -68,9 +70,11 @@ exports.create = function (api) {
       sbot = _sbot
       sbot.on('closed', function () {
         sbot = null
+        connection.set(null)
         notify(new Error('closed'))
       })
 
+      connection.set(sbot)
       notify()
       refreshPeers()
     })
@@ -201,6 +205,7 @@ exports.create = function (api) {
       },
       obs: {
         connectionStatus: (listener) => connectionStatus(listener),
+        connection,
         connectedPeers: () => connectedPeers,
         localPeers: () => localPeers
       }
