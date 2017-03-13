@@ -9,9 +9,18 @@ exports.needs = nest({
 exports.create = function (api) {
   return nest('feed.pull.channel', function (channel) {
     return function (opts) {
-      return api.sbot.pull.query(extend(opts, {query: [
-        {$filter: {value: {content: { channel }}}}
-      ]}))
+      var filter = {value: {content: { channel }}}
+      var query = {query: [
+        {$filter: filter}
+      ]}
+
+      // HACK: handle lt
+      if (opts.lt != null) {
+        filter.timestamp = {$lt: opts.lt, $gte: 0, $le: 'hack around dominictarr/map-filter-reduce#1'}
+        delete opts.lt
+      }
+
+      return api.sbot.pull.query(extend(opts, query))
     }
   })
 }
