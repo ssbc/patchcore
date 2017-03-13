@@ -53,7 +53,7 @@ exports.create = function (api) {
   var connectedPeers = Value([])
   var localPeers = Value([])
 
-  setInterval(refreshPeers, 5e3)
+  setInterval(refreshPeers, 1e3)
 
   var rec = Reconnect(function (isConn) {
     function notify (value) {
