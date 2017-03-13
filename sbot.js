@@ -72,6 +72,7 @@ exports.create = function (api) {
       })
 
       notify()
+      refreshPeers()
     })
   })
 
