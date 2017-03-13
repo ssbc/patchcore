@@ -33,7 +33,6 @@ exports.gives = {
       links: true,
       search: true,
       replicateProgress: true,
-      queryProgress: true
     },
     obs: {
       connectionStatus: true,
@@ -198,9 +197,6 @@ exports.create = function (api) {
         }),
         replicateProgress: rec.source(function (opts) {
           return sbot.replicate.changes()
-        }),
-        queryProgress: rec.source(function (opts) {
-          return sbot.query.progress()
         })
       },
       obs: {
