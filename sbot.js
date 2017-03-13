@@ -121,6 +121,19 @@ exports.create = function (api) {
             })
           }
 
+          if (sbot) {
+            // instant updating of interface (just incase sbot is busy)
+            runHooks({
+              publishing: true,
+              timestamp: Date.now(),
+              value: {
+                timestamp: Date.now(),
+                author: keys.id,
+                content
+              }
+            })
+          }
+
           feed.add(content, (err, msg) => {
             if (err) console.error(err)
             else if (!cb) console.log(msg)
@@ -197,7 +210,9 @@ exports.create = function (api) {
   // scoped
 
   function runHooks (msg) {
-    if (!cache[msg.key]) {
+    if (msg.publishing) {
+      api.sbot.hook.feed(msg)
+    } else if (!cache[msg.key]) {
       cache[msg.key] = msg.value
       api.sbot.hook.feed(msg)
     }
