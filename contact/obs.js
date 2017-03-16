@@ -72,7 +72,7 @@ function reduce (stream) {
     if (newestValues[item.id] < item.timestamp) {
       newestValues[item.id] = item.timestamp
       if (item.value != null) {
-        if (item.value) {
+        if (item.value && item.id) {
           result.add(item.id)
         } else {
           result.delete(item.id)
