@@ -104,6 +104,8 @@ exports.create = function (api) {
 }
 
 function About (api, id, sync) {
+  if (!id) throw new Error('About requires an id!')
+
   var pauser = pullPause((paused) => {})
 
   // transparent image
