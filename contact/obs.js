@@ -69,7 +69,7 @@ exports.create = function (api) {
 function reduce (stream) {
   var newestValues = {}
   return MutantPullReduce(stream, (result, item) => {
-    if (!ref.isFeed(item.id)) return
+    if (!ref.isFeed(item.id)) return result
     newestValues[item.id] = newestValues[item.id] || 0
     if (newestValues[item.id] < item.timestamp) {
       newestValues[item.id] = item.timestamp
