@@ -1,5 +1,6 @@
 var nest = require('depnest')
 var MutantPullReduce = require('mutant-pull-reduce')
+var ref = require('ssb-ref')
 
 exports.needs = nest({
   'sbot.pull.query': 'first',
@@ -68,11 +69,12 @@ exports.create = function (api) {
 function reduce (stream) {
   var newestValues = {}
   return MutantPullReduce(stream, (result, item) => {
+    if (!ref.isFeed(item.id)) return
     newestValues[item.id] = newestValues[item.id] || 0
     if (newestValues[item.id] < item.timestamp) {
       newestValues[item.id] = item.timestamp
       if (item.value != null) {
-        if (item.value && item.id) {
+        if (item.value) {
           result.add(item.id)
         } else {
           result.delete(item.id)

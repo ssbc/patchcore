@@ -3,6 +3,7 @@ var pullPause = require('pull-pause')
 var pull = require('pull-stream')
 var msgs = require('ssb-msgs')
 var nest = require('depnest')
+var ref = require('ssb-ref')
 var colorHash = new (require('color-hash'))()
 
 exports.needs = nest({
@@ -104,7 +105,7 @@ exports.create = function (api) {
 }
 
 function About (api, id, sync) {
-  if (!id) throw new Error('About requires an id!')
+  if (!ref.isLink(id)) throw new Error('About requires an id!')
 
   var pauser = pullPause((paused) => {})
 
