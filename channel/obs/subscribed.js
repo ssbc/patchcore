@@ -11,14 +11,23 @@ exports.needs = nest({
 })
 
 exports.gives = nest({
-  'channel.obs': ['subscribed']
+  'channel.obs.subscribed': true,
+  'sbot.hook.feed': true
 })
 
 exports.create = function (api) {
   var cache = {}
+  var reducers = {}
 
   return nest({
-    'channel.obs': {subscribed}
+    'channel.obs.subscribed': subscribed,
+    'sbot.hook.feed': function (msg) {
+      if (isChannelSubscription(msg)) {
+        if (msg.value.content.channel && reducers[msg.value.author]) {
+          reducers[msg.value.author].push(msg)
+        }
+      }
+    }
   })
 
   function subscribed (userId) {
@@ -33,16 +42,21 @@ exports.create = function (api) {
         })
       )
 
+      var latestTimestamp = 0
+
       var result = MutantPullReduce(stream, (result, msg) => {
-        var c = msg.value.content
-        if (typeof c.channel === 'string' && c.channel) {
-          var channel = c.channel.trim()
-          if (channel) {
-            if (typeof c.subscribed === 'boolean') {
-              if (c.subscribed) {
-                result.add(channel)
-              } else {
-                result.delete(channel)
+        if (msg.value.timestamp > latestTimestamp) {
+          var c = msg.value.content
+          if (typeof c.channel === 'string' && c.channel) {
+            latestTimestamp = msg.value.timestamp
+            var channel = c.channel.trim()
+            if (channel) {
+              if (typeof c.subscribed === 'boolean') {
+                if (c.subscribed) {
+                  result.add(channel)
+                } else {
+                  result.delete(channel)
+                }
               }
             }
           }
@@ -52,6 +66,8 @@ exports.create = function (api) {
         startValue: new Set(),
         nextTick: true
       })
+
+      reducers[userId] = result
 
       var instance = throttle(result, 2000)
       instance.sync = result.sync
@@ -64,4 +80,8 @@ exports.create = function (api) {
       return instance
     }
   }
+}
+
+function isChannelSubscription (msg) {
+  return msg.value && msg.value.content && msg.value.content.type === 'channel'
 }
