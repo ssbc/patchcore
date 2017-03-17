@@ -2,6 +2,7 @@ var pull = require('pull-stream')
 var computed = require('mutant/computed')
 var MutantPullReduce = require('mutant-pull-reduce')
 var nest = require('depnest')
+var ref = require('ssb-ref')
 
 var throttle = require('mutant/throttle')
 
@@ -21,6 +22,7 @@ exports.create = function (api) {
   })
 
   function subscribed (userId) {
+    if (!ref.isFeed(userId)) throw new Error('a feed id must be specified')
     if (cache[userId]) {
       return cache[userId]
     } else {

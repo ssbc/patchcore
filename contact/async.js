@@ -1,5 +1,6 @@
 var nest = require('depnest')
 var pull = require('pull-stream')
+var ref = require('ssb-ref')
 
 exports.needs = nest({
   'sbot.pull.query': 'first',
@@ -29,6 +30,7 @@ exports.create = function (api) {
   }
 
   function follow (id, cb) {
+    if (!ref.isFeed(id)) throw new Error('a feed id must be specified')
     api.sbot.async.publish({
       type: 'contact',
       contact: id,
@@ -37,6 +39,7 @@ exports.create = function (api) {
   }
 
   function unfollow (id, cb) {
+    if (!ref.isFeed(id)) throw new Error('a feed id must be specified')
     api.sbot.async.publish({
       type: 'contact',
       contact: id,
@@ -46,7 +49,7 @@ exports.create = function (api) {
 }
 
 function makeQuery (a, b) {
-  return {"$filter": {
+  return {'$filter': {
     value: {
       author: a,
       content: {
@@ -54,6 +57,6 @@ function makeQuery (a, b) {
         contact: b,
         following: true
       }
-    },
+    }
   }}
 }

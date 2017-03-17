@@ -8,6 +8,8 @@ exports.needs = nest({
 
 exports.create = function (api) {
   return nest('feed.pull.channel', function (channel) {
+    if (typeof channel !== 'string') throw new Error('a channel name be specified')
+
     return function (opts) {
       var filter = {value: {content: { channel }}}
       var query = {query: [

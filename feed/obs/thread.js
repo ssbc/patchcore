@@ -2,6 +2,7 @@ var nest = require('depnest')
 var pull = require('pull-stream')
 var pullCat = require('pull-cat')
 var sort = require('ssb-sort')
+var ref = require('ssb-ref')
 var { map, computed } = require('mutant')
 
 exports.needs = nest({
@@ -15,6 +16,8 @@ exports.gives = nest('feed.obs.thread')
 
 exports.create = function (api) {
   return nest('feed.obs.thread', function (rootId, {branch}) {
+    if (!ref.isLink(rootId)) throw new Error('an id must be specified')
+
     var rootMessageStream = pull(
       pull.values([rootId]),
       pull.asyncMap((key, cb) => {
