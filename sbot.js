@@ -28,6 +28,7 @@ exports.gives = {
     pull: {
       log: true,
       userFeed: true,
+      messagesByType: true,
       query: true,
       feed: true,
       links: true,
@@ -176,6 +177,9 @@ exports.create = function (api) {
         }),
         userFeed: rec.source(opts => {
           return sbot.createUserStream(opts)
+        }),
+        messagesByType: rec.source(opts => {
+          return sbot.messagesByType(opts)
         }),
         feed: rec.source(function (opts) {
           return pull(
