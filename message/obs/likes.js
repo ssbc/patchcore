@@ -1,4 +1,5 @@
 var nest = require('depnest')
+var ref = require('ssb-ref')
 var { Value, computed } = require('mutant')
 
 exports.needs = nest({
@@ -31,6 +32,7 @@ exports.create = function (api) {
       }
     },
     'message.obs.likes': (id) => {
+      if (!ref.isLink(id)) throw new Error('an id must be specified')
       return computed(get(id), getLikes)
     }
   })

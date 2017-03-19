@@ -1,5 +1,6 @@
 const nest = require('depnest')
 const getAvatar = require('ssb-avatar')
+const ref = require('ssb-ref')
 
 exports.needs = nest({
   'sbot.async.get': 'first',
@@ -12,6 +13,7 @@ exports.gives = nest('message.async.name')
 
 exports.create = function (api) {
   return nest('message.async.name', function (id, cb) {
+    if (!ref.isLink(id)) throw new Error('an id must be specified')
     var fallbackName = id.substring(0, 10) + '...'
     api.sbot.async.get(id, function (err, value) {
       if (err && err.name === 'NotFoundError') {

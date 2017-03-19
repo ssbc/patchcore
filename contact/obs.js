@@ -32,6 +32,7 @@ exports.create = function (api) {
   })
 
   function following (id) {
+    if (!ref.isFeed(id)) throw new Error('a feed id must be specified')
     if (!followingCache[id]) {
       followingCache[id] = reduce(api.sbot.pull.query({
         query: [
@@ -49,6 +50,7 @@ exports.create = function (api) {
   }
 
   function followers (id) {
+    if (!ref.isFeed(id)) throw new Error('a feed id must be specified')
     if (!followerCache[id]) {
       followerCache[id] = reduce(api.sbot.pull.query({
         query: [
@@ -69,7 +71,7 @@ exports.create = function (api) {
 function reduce (stream) {
   var newestValues = {}
   return MutantPullReduce(stream, (result, item) => {
-    if (!ref.isFeed(item.id)) return result
+    if (!ref.isFeed(item.id)) return result // invalid message, skip this item
     newestValues[item.id] = newestValues[item.id] || 0
     if (newestValues[item.id] < item.timestamp) {
       newestValues[item.id] = item.timestamp

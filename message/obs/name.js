@@ -8,7 +8,7 @@ exports.gives = nest('message.obs.name')
 
 exports.create = function (api) {
   return nest('message.obs.name', function (id) {
-    if (typeof id !== 'string') { throw new Error('link must be to message id') }
+    if (!ref.isLink(id)) throw new Error('an id must be specified')
     var value = Value(id.substring(0, 10) + '...')
 
     if (ref.isMsg(id)) {
