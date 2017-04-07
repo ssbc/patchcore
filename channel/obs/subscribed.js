@@ -42,16 +42,16 @@ exports.create = function (api) {
         })
       )
 
-      var latestTimestamp = 0
+      var latestTimestamps = {}
 
       var result = MutantPullReduce(stream, (result, msg) => {
-        if (msg.value.timestamp > latestTimestamp) {
-          var c = msg.value.content
-          if (typeof c.channel === 'string' && c.channel) {
-            latestTimestamp = msg.value.timestamp
-            var channel = c.channel.trim()
+        var c = msg.value.content
+        if (c.type === 'channel' && typeof c.channel === 'string') {
+          var channel = c.channel.trim()
+          if (channel && msg.value.timestamp > (latestTimestamps[channel] || 0)) {
             if (channel) {
               if (typeof c.subscribed === 'boolean') {
+                latestTimestamps[channel] = msg.value.timestamp
                 if (c.subscribed) {
                   result.add(channel)
                 } else {
