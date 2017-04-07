@@ -8,13 +8,15 @@ or _the shared assumptions of all (or most) ssb related applications_
 
 here's a list of apps in the wild using `patchcore`:
 
-- [`patchwork-next`](https://github.com/mmckegg/patchwork-next)
+- [`patchwork`](https://github.com/ssbc/patchwork)
+- [`patchbay`](https://github.com/ssbc/patchbay)
 - [(add yours here)](https://github.com/ssbc/patchcore/edit/master/README.md)
 
 ## plugins
 
 here's a list of plugins that build on top of `patchcore`:
 
+- [`patch-gatherings`](https://github.com/pietgeursen/patch-gatherings)
 - [(add yours here)](https://github.com/ssbc/patchcore/edit/master/README.md)
 
 ## directory structure
