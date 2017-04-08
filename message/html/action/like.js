@@ -30,9 +30,11 @@ exports.create = (api) => {
   function publishLike (msg, status = true) {
     var dig = status ? {
       type: 'vote',
+      channel: msg.value.content.channel,
       vote: { link: msg.key, value: 1, expression: 'Dig' }
     } : {
       type: 'vote',
+      channel: msg.value.content.channel,
       vote: { link: msg.key, value: 0, expression: 'Undig' }
     }
     if (msg.value.content.recps) {
