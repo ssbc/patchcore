@@ -25,7 +25,9 @@ exports.create = (api) => {
         }
       }
     }
-    return h('span', when(liked, h('a.liked', attributes, 'Unlike'), h('a.unliked', attributes, 'Like'))
+    return h('span', when(liked, 
+                          h('a.liked', attributes, 'Unlike'), 
+                          h('a.unliked', attributes, 'Like'))
   })
 
   function publishLike (msg, status = true) {
