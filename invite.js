@@ -62,7 +62,8 @@ exports.create = function (api) {
           api.sbot.async.publish({
             type: 'contact',
             contact: data.key,
-            following: true
+            following: true,
+            autofollow: true
           }, cb)
         }
       })
