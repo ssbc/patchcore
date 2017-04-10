@@ -13,21 +13,16 @@ exports.create = (api) => {
   return nest('message.html.action', function like (msg) {
     var id = api.keys.sync.id()
     var liked = computed([api.message.obs.likes(msg.key), id], doesLike)
-    var attributes = {
-      href: '#',
-      events: {
-        click: (ev) => {
-          if (liked()) {
-            publishLike(msg, false)
-          } else {
-            publishLike(msg, true)
-          }
-        }
-      }
-    }
-    return h('span', when(liked, 
-                          h('a.liked', attributes, 'Unlike'), 
-                          h('a.unliked', attributes, 'Like'))
+    return when(liked, 
+      h('a.unlike', {
+        href: '#',
+        'ev-click': () => publishLike(msg, false)
+      }, 'Unlike'),
+      h('a.like', {
+        href: '#',
+        'ev-click': () => publishLike(msg, true)
+      }, 'Like'),
+    )
   })
 
   function publishLike (msg, status = true) {
