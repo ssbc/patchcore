@@ -21,7 +21,7 @@ exports.create = (api) => {
       h('a.like', {
         href: '#',
         'ev-click': () => publishLike(msg, true)
-      }, 'Like'),
+      }, 'Like')
     )
   })
 
