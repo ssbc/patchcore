@@ -13,7 +13,7 @@ exports.create = (api) => {
   return nest('message.html.action', function like (msg) {
     var id = api.keys.sync.id()
     var liked = computed([api.message.obs.likes(msg.key), id], doesLike)
-    return when(liked, 
+    return when(liked,
       h('a.unlike', {
         href: '#',
         'ev-click': () => publishLike(msg, false)

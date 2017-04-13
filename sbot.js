@@ -33,7 +33,7 @@ exports.gives = {
       feed: true,
       links: true,
       search: true,
-      replicateProgress: true,
+      replicateProgress: true
     },
     obs: {
       connectionStatus: true,

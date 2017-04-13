@@ -23,7 +23,7 @@ exports.create = function (api) {
 
       var c = msg.value.content
       if (c.type !== 'vote') return
-      if (!c.vote || !c.vote.link) return 
+      if (!c.vote || !c.vote.link) return
 
       var likes = get(c.vote.link)()
       var author = msg.value.author

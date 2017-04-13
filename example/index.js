@@ -26,7 +26,7 @@ function entry (sockets) {
   return {
     feed: {
       html: {
-        render: apply.first(sockets.feed.html.render),
+        render: apply.first(sockets.feed.html.render)
       },
       pull: {
         public: apply.first(sockets.feed.pull.public)
