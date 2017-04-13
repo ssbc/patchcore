@@ -1,5 +1,4 @@
 const renderer = require('ssb-markdown')
-const fs = require('fs')
 const h = require('mutant/h')
 const ref = require('ssb-ref')
 const nest = require('depnest')
