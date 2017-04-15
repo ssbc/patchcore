@@ -15,7 +15,9 @@ exports.needs = nest({
 exports.gives = nest('feed.obs.thread')
 
 exports.create = function (api) {
-  return nest('feed.obs.thread', function (rootId, {branch}) {
+  return nest('feed.obs.thread', thread)
+
+  function thread (rootId, { branch } = {}) {
     if (!ref.isLink(rootId)) throw new Error('an id must be specified')
 
     var rootMessageStream = pull(
@@ -46,9 +48,7 @@ exports.create = function (api) {
       messages,
       lastId: computed(messages, (messages) => {
         var last = messages[messages.length - 1]
-        if (last) {
-          return last.key
-        }
+        if (last) return last.key
       }),
       rootId: computed(messages, (messages) => {
         if (branch && messages.length) {
@@ -58,19 +58,32 @@ exports.create = function (api) {
         }
       }),
       branchId: computed(messages, (messages) => {
-        if (branch) {
-          return rootId
-        }
+        if (branch) return rootId
       }),
       previousKey: function (msg) {
         return PreviousKey(result.messages, msg)
-      }
+      },
+      isPrivate: computed(messages, msgs => {
+        if (!msgs[0]) return false
+
+        return msgs[0].value.private || false
+      }),
+      channel: computed(messages, msgs => {
+        if (!msgs[0]) return undefined
+
+        return msgs[0].value.content.channel
+      }),
+      recps: computed(messages, msgs => {
+        if (!msgs[0]) return undefined
+
+        return msgs[0].value.content.recps
+      })
     }
 
     result.sync = messageLookup.sync
 
     return result
-  })
+  }
 
   function unboxIfNeeded () {
     return pull.map(function (msg) {

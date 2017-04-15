@@ -33,7 +33,7 @@ exports.gives = {
       feed: true,
       links: true,
       search: true,
-      replicateProgress: true,
+      replicateProgress: true
     },
     obs: {
       connectionStatus: true,
@@ -226,7 +226,7 @@ exports.create = function (api) {
   function refreshPeers () {
     if (sbot) {
       sbot.gossip.peers((err, peers) => {
-        if (err) throw console.log(err)
+        if (err) return console.error(err)
         connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
         localPeers.set(peers.filter(x => x.source === 'local').map(x => x.key))
       })
