@@ -10,6 +10,7 @@ here's a list of apps in the wild using `patchcore`:
 
 - [`patchwork`](https://github.com/ssbc/patchwork)
 - [`patchbay`](https://github.com/ssbc/patchbay)
+- [`patchlite`](https://github.com/ssbc/patchlite)
 - [(add yours here)](https://github.com/ssbc/patchcore/edit/master/README.md)
 
 ## plugins
@@ -17,6 +18,7 @@ here's a list of apps in the wild using `patchcore`:
 here's a list of plugins that build on top of `patchcore`:
 
 - [`patch-gatherings`](https://github.com/pietgeursen/patch-gatherings)
+- [`patch-intl`](https://github.com/pietgeursen/patch-intl)
 - [(add yours here)](https://github.com/ssbc/patchcore/edit/master/README.md)
 
 ## directory structure
