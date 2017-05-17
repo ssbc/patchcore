@@ -11,6 +11,7 @@ module.exports = {
   gives: nest('blob.html.input'),
   create: function (api) {
     return nest('blob.html.input', function FileInput (onAdded, opts = {}) {
+      if(opts.meta && opts.meta.private) return
       return h('input', {
         accept: opts.accept,
         type: 'file',
@@ -156,3 +157,4 @@ function rotate (img, orientation) {
   ctx.drawImage(img, -img.width / 2, -img.height / 2)
   return canvas
 }
+
