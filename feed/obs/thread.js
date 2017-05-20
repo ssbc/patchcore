@@ -47,8 +47,9 @@ exports.create = function (api) {
     var result = {
       messages,
       lastId: computed(messages, (messages) => {
-        var last = messages[messages.length - 1]
-        if (last) return last.key
+        var branches = sort.heads(messages)
+        if(branches.length <= 1) branches = branches[0]
+        return branches
       }),
       rootId: computed(messages, (messages) => {
         if (branch && messages.length) {
