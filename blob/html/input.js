@@ -30,7 +30,7 @@ module.exports = {
                   image = resize(image, opts.resize.width, opts.resize.height)
                 }
                 if (image.toBlob) {
-                  if (mimeType !== 'image/jpeg' || mimeType !== 'image/png') {
+                  if (mimeType !== 'image/jpeg' && mimeType !== 'image/png') {
                     mimeType = 'image/jpeg'
                   }
                   image.toBlob(blob => {
