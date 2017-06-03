@@ -2,6 +2,7 @@ const renderer = require('ssb-markdown')
 const h = require('mutant/h')
 const ref = require('ssb-ref')
 const nest = require('depnest')
+var htmlEscape = require('html-escape')
 
 exports.needs = nest({
   'blob.sync.url': 'first',
@@ -15,20 +16,29 @@ exports.create = function (api) {
 
   function markdown (content) {
     if (typeof content === 'string') { content = {text: content} }
-    // handle patchwork style mentions.
+    // handle patchwork style mentions and custom emoji.
     var mentions = {}
+    var emojiMentions = {}
     if (Array.isArray(content.mentions)) {
       content.mentions.forEach(function (link) {
-        if (link.name) mentions['@' + link.name] = link.link
+        if (link && link.name && link.link) {
+          if (link.emoji) emojiMentions[link.name] = link.link
+          else mentions['@' + link.name] = link.link
+        }
       })
     }
 
     var md = h('div', {className: 'Markdown'})
     md.innerHTML = renderer.block(content.text, {
-      emoji: renderEmoji,
+      emoji: (emoji) => {
+        var url = emojiMentions[emoji]
+          ? api.blob.sync.url(emojiMentions[emoji])
+          : api.emoji.sync.url(emoji)
+        return renderEmoji(emoji, url)
+      },
       toUrl: (id) => {
         if (ref.isBlob(id)) return api.blob.sync.url(id)
-        return (mentions[id] ? mentions[id] : id)
+        return mentions[id] || id
       },
       imageLink: (id) => id
     })
@@ -36,14 +46,13 @@ exports.create = function (api) {
     return md
   }
 
-  function renderEmoji (emoji) {
-    var url = api.emoji.sync.url(emoji)
+  function renderEmoji (emoji, url) {
     if (!url) return ':' + emoji + ':'
     return `
       <img
-        src="${encodeURI(url)}"
-        alt=":${escape(emoji)}:"
-        title=":${escape(emoji)}:"
+        src="${htmlEscape(url)}"
+        alt=":${htmlEscape(emoji)}:"
+        title=":${htmlEscape(emoji)}:"
         class="emoji"
       >
     `
