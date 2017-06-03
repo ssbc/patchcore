@@ -2,6 +2,7 @@ const renderer = require('ssb-markdown')
 const h = require('mutant/h')
 const ref = require('ssb-ref')
 const nest = require('depnest')
+var htmlEscape = require('html-escape')
 
 exports.needs = nest({
   'blob.sync.url': 'first',
@@ -49,9 +50,9 @@ exports.create = function (api) {
     if (!url) return ':' + emoji + ':'
     return `
       <img
-        src="${encodeURI(url)}"
-        alt=":${escape(emoji)}:"
-        title=":${escape(emoji)}:"
+        src="${htmlEscape(url)}"
+        alt=":${htmlEscape(emoji)}:"
+        title=":${htmlEscape(emoji)}:"
         class="emoji"
       >
     `
