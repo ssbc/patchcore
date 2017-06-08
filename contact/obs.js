@@ -9,7 +9,7 @@ exports.needs = nest({
 
 exports.gives = nest({
   'contact.obs': ['following', 'followers'],
-  'sbot.hook.feed': true
+  'sbot.hook.publish': true
 })
 
 exports.create = function (api) {
@@ -18,7 +18,7 @@ exports.create = function (api) {
 
   return nest({
     'contact.obs': { following, followers },
-    'sbot.hook.feed': function (msg) {
+    'sbot.hook.publish': function (msg) {
       if (isContact(msg) && msg.timestamp) {
         var author = msg.value.author
         var contact = msg.value.content.contact
