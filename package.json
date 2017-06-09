@@ -38,6 +38,7 @@
     "depnest": "^1.0.2",
     "emoji-named-characters": "^1.0.2",
     "es2040": "^1.2.4",
+    "flumeview-level": "^2.0.2",
     "flumeview-query": "^3.0.3",
     "html-escape": "^2.0.0",
     "human-time": "0.0.1",
