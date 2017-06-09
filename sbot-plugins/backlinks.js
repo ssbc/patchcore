@@ -40,7 +40,6 @@ function extractLinks (msg, emit) {
     }
   })
   links.forEach(link => {
-    console.log('index backlink', link)
     emit(extend(msg, {
       dest: link
     }))
