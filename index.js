@@ -2,7 +2,7 @@ const bulk = require('bulk-require')
 
 module.exports = {
   patchcore: bulk(__dirname, [
-    './!(index).js',
-    './!(node_modules|example)/**/*.js'
+    './+(config|emoji|invite|keys|sbot).js',
+    './+(about|blob|channel|contact|feed|lib|message)/**/*.js'
   ])
 }

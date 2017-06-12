@@ -12,7 +12,7 @@ exports.needs = nest({
 
 exports.gives = nest({
   'channel.obs.subscribed': true,
-  'sbot.hook.feed': true
+  'sbot.hook.publish': true
 })
 
 exports.create = function (api) {
@@ -21,7 +21,7 @@ exports.create = function (api) {
 
   return nest({
     'channel.obs.subscribed': subscribed,
-    'sbot.hook.feed': function (msg) {
+    'sbot.hook.publish': function (msg) {
       if (isChannelSubscription(msg)) {
         if (msg.value.content.channel && reducers[msg.value.author]) {
           reducers[msg.value.author].push(msg)

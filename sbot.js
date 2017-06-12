@@ -11,7 +11,7 @@ exports.needs = nest({
   'config.sync.load': 'first',
   'keys.sync.load': 'first',
   'sbot.obs.connectionStatus': 'first',
-  'sbot.hook.feed': 'map'
+  'sbot.hook.publish': 'map'
 })
 
 exports.gives = {
@@ -33,7 +33,8 @@ exports.gives = {
       feed: true,
       links: true,
       search: true,
-      replicateProgress: true
+      replicateProgress: true,
+      backlinks: true
     },
     obs: {
       connectionStatus: true,
@@ -175,6 +176,9 @@ exports.create = function (api) {
         query: rec.source(query => {
           return sbot.query.read(query)
         }),
+        backlinks: rec.source(query => {
+          return sbot.backlinks.read(query)
+        }),
         userFeed: rec.source(opts => {
           return sbot.createUserStream(opts)
         }),
@@ -216,10 +220,10 @@ exports.create = function (api) {
 
   function runHooks (msg) {
     if (msg.publishing) {
-      api.sbot.hook.feed(msg)
+      api.sbot.hook.publish(msg)
     } else if (!cache[msg.key]) {
-      cache[msg.key] = msg.value
-      api.sbot.hook.feed(msg)
+      // cache[msg.key] = msg.value
+      // api.sbot.hook.feed(msg)
     }
   }
 

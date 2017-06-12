@@ -3,7 +3,7 @@ const extend = require('xtend')
 
 exports.gives = nest('feed.pull.channel')
 exports.needs = nest({
-  'sbot.pull.query': 'first'
+  'sbot.pull.backlinks': 'first'
 })
 
 exports.create = function (api) {
@@ -11,18 +11,17 @@ exports.create = function (api) {
     if (typeof channel !== 'string') throw new Error('a channel name be specified')
 
     return function (opts) {
-      var filter = {value: {content: { channel }}}
-      var query = {query: [
-        {$filter: filter}
-      ]}
+      var filter = {dest: `#${channel}`}
 
       // HACK: handle lt
       if (opts.lt != null) {
-        filter.timestamp = {$lt: opts.lt, $gte: 0, $le: 'hack around dominictarr/map-filter-reduce#1'}
+        filter.timestamp = {$lt: opts.lt, $gte: 0}
         delete opts.lt
       }
 
-      return api.sbot.pull.query(extend(opts, query))
+      return api.sbot.pull.backlinks(extend(opts, {query: [
+        {$filter: filter}
+      ]}))
     }
   })
 }
