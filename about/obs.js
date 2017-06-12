@@ -1,13 +1,12 @@
-var {Value, Struct, Dict, computed} = require('mutant')
-var pullPause = require('pull-pause')
+var {Value, computed, onceTrue} = require('mutant')
+var defer = require('pull-defer')
 var pull = require('pull-stream')
-var msgs = require('ssb-msgs')
 var nest = require('depnest')
 var ref = require('ssb-ref')
 var colorHash = new (require('color-hash'))()
 
 exports.needs = nest({
-  'sbot.pull.query': 'first',
+  'sbot.obs.connection': 'first',
   'blob.sync.url': 'first',
   'keys.sync.id': 'first'
 })
@@ -31,11 +30,10 @@ exports.create = function (api) {
 
   return nest({
     'about.obs': {
-      name: (id) => get(id).displayName,
+      name: (id) => get(id).name,
       description: (id) => get(id).description,
       image: (id) => get(id).image,
       imageUrl: (id) => get(id).imageUrl,
-
       names: (id) => get(id).names,
       images: (id) => get(id).images,
       color: (id) => computed(id, (id) => colorHash.hex(id))
@@ -43,148 +41,135 @@ exports.create = function (api) {
   })
 
   function get (id) {
+    if (!ref.isFeed(id)) {
+      console.log(id) //throw new Error('About requires an id!')
+      console.trace()
+    }
     if (!cacheLoading) {
       cacheLoading = true
       loadCache()
+      window.things = cache
     }
     if (!cache[id]) {
-      cache[id] = About(api, id, sync)
+      cache[id] = About(api, id)
     }
     return cache[id]
   }
 
   function loadCache () {
     pull(
-      api.sbot.pull.query({
-        query: [
-          {$filter: {
-            value: {
-              content: {
-                type: 'about'
-              }
-            }
-          }},
-          {$map: {
-            timestamp: 'timestamp',
-            author: ['value', 'author'],
-            id: ['value', 'content', 'about'],
-            name: ['value', 'content', 'name'],
-            image: ['value', 'content', 'image'],
-            description: ['value', 'content', 'description']
-          }}
-        ],
-        live: true
-      }),
-      pull.drain(
-        msg => {
-          if (msg.sync) {
-            sync.set(true)
-          } else if (msgs.isLink(msg.id, 'feed')) {
-            get(msg.id).push(msg)
+      StreamWhenConnected(api.sbot.obs.connection, sbot => sbot.about.stream({live: true})),
+      pull.drain(item => {
+        for (var target in item) {
+          if (ref.isFeed(target)) {
+            get(target).push(item[target])
           }
-        },
-        () => sync.set(true)
-      )
+        }
+
+        if (!sync()) {
+          sync.set(true)
+        }
+      })
     )
   }
 }
 
-function About (api, id, sync) {
-  if (!ref.isLink(id)) throw new Error('About requires an id!')
-
-  var pauser = pullPause((paused) => {})
-
+function About (api, id) {
   // transparent image
   var fallbackImageUrl = 'data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
 
+  var state = Value({})
   var yourId = api.keys.sync.id()
-  var lastestTimestamps = {}
+  var image = computed([state, 'image', id, yourId], socialValue)
+  var name = computed([state, 'name', id, yourId, id.slice(1, 10)], socialValue)
+  var description = computed([state, 'description', id, yourId], socialValue)
 
-  var obs = Struct({
-    assignedNames: Dict(),
-    assignedImages: Dict(),
-    assignedDescriptions: Dict()
-  }, {
-    onListen: pauser.resume,
-    onUnlisten: pauser.pause
-  })
-
-  obs.sync = computed([sync, obs], (v) => v)
-  obs.displayName = computed([obs.assignedNames, id, yourId, id.slice(1, 10)], socialValue)
-  obs.description = computed([obs.assignedDescriptions, id, yourId], socialValue)
-  obs.image = computed([obs.assignedImages, id, yourId], socialValue)
-
-  obs.names = computed(obs.assignedNames, indexByValue)
-  obs.images = computed(obs.assignedImages, indexByValue)
-
-  obs.imageUrl = computed(obs.image, (blobId) => {
-    if (blobId) {
-      return api.blob.sync.url(blobId)
-    } else {
-      return fallbackImageUrl
-    }
-  })
-
-  obs.push = push
-
-  return obs
-
-  // scoped
-
-  function push (msg) {
-    if (!lastestTimestamps[msg.author]) {
-      lastestTimestamps[msg.author] = {
-        name: 0, image: 0, description: 0
+  return {
+    name,
+    image,
+    description,
+    names: computed([state, 'name', id, yourId, id.slice(1, 10)], allValues),
+    images: computed([state, 'image', id, yourId], allValues),
+    descriptions: computed([state, 'description', id, yourId], allValues),
+    imageUrl: computed(image, (blobId) => {
+      if (blobId) {
+        return api.blob.sync.url(blobId)
+      } else {
+        return fallbackImageUrl
       }
-    }
-    if (msg.name && lastestTimestamps[msg.author].name < msg.timestamp) {
-      lastestTimestamps[msg.author].name = msg.timestamp
-      obs.assignedNames.put(msg.author, msg.name)
-    }
-    if (msg.image && lastestTimestamps[msg.author].image < msg.timestamp) {
-      lastestTimestamps[msg.author].image = msg.timestamp
-      var obj = msgs.link(msg.image, 'blob')
-      if (obj && obj.link) {
-        obs.assignedImages.put(msg.author, obj.link)
+    }),
+    push: function (values) {
+      var lastState = state()
+      var changed = false
+      for (var key in values) {
+        var valuesForKey = lastState[key] = lastState[key] || {}
+        for (var author in values[key]) {
+          var value = values[key][author]
+          if (!valuesForKey[author] || value.lastSeq > valuesForKey[author].lastSeq) {
+            valuesForKey[author] = value
+            changed = true
+          }
+        }
       }
-    }
-    if (msg.description && lastestTimestamps[msg.author].description < msg.timestamp) {
-      lastestTimestamps[msg.author].description = msg.timestamp
-      obs.assignedDescriptions.put(msg.author, msg.description)
+      if (changed) {
+        state.set(lastState)
+      }
     }
   }
 }
 
-function socialValue (lookup, id, yourId, fallback) {
-  return lookup[yourId] || lookup[id] || highestRank(lookup) || fallback || null
+function socialValue (lookup, key, id, yourId, fallback) {
+  var result = lookup[key] ? getValue(lookup[key][yourId]) || getValue(lookup[key][id]) || highestRank(lookup[key]) : null
+  if (result != null) {
+    return result
+  } else {
+    return fallback || null
+  }
+}
+
+function allValues (lookup, key, id, yourId) {
+  var values = {}
+  for (var author in lookup[key]) {
+    var value = getValue(lookup[key][author])
+    if (value != null) {
+      values[value] = values[value] || []
+      values[value].push(author)
+    }
+  }
+  return values
 }
 
 function highestRank (lookup) {
-  var indexed = indexByValue(lookup)
+  var counts = {}
   var highestCount = 0
   var currentHighest = null
-  Object.keys(indexed).forEach((item) => {
-    var count = indexed[item].length
-    if (count > highestCount) {
-      highestCount = count
-      currentHighest = item
+  for (var key in lookup) {
+    var value = getValue(lookup[key])
+    if (value != null) {
+      counts[value] = (counts[value] || 0) + 1
+      if (counts[value] > highestCount) {
+        currentHighest = value
+        highestCount = counts[value]
+      }
     }
-  })
+  }
   return currentHighest
 }
 
-function indexByValue (lookup) {
-  var result = {}
-  Object.keys(lookup).forEach((key) => {
-    var value = lookup[key]
-    if (!result[value]) {
-      result[value] = []
+function getValue (item) {
+  if (item && item.value) {
+    if (typeof item.value === 'string') {
+      return item.value
+    } else if (item.value && item.value.link && ref.isLink(item.value.link)) {
+      return item.value.link
     }
-    result[value].push(key)
-  })
-  return result
+  }
 }
 
-function isAbout (msg) {
-  return msg.value && msg.value.content && msg.value.content.type === 'about'
+function StreamWhenConnected (connection, fn) {
+  var stream = defer.source()
+  onceTrue(connection, function (connection) {
+    stream.resolve(fn(connection))
+  })
+  return stream
 }
