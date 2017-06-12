@@ -99,7 +99,7 @@ function Contact (api, id, sync) {
 }
 
 function computedIds (state, key, compare, sync) {
-  var obs = computed([state, 'following', true], getIds)
+  var obs = computed([state, key, true], getIds)
   obs.sync = sync
   return obs
 }
