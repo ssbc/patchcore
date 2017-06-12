@@ -3,9 +3,11 @@ const h = require('mutant/h')
 const ref = require('ssb-ref')
 const nest = require('depnest')
 var htmlEscape = require('html-escape')
+var watch = require('mutant/watch')
 
 exports.needs = nest({
   'blob.sync.url': 'first',
+  'blob.obs.has': 'first',
   'emoji.sync.url': 'first'
 })
 
@@ -28,22 +30,24 @@ exports.create = function (api) {
       })
     }
 
-    var md = h('div', {className: 'Markdown'})
-    md.innerHTML = renderer.block(content.text, {
-      emoji: (emoji) => {
-        var url = emojiMentions[emoji]
-          ? api.blob.sync.url(emojiMentions[emoji])
-          : api.emoji.sync.url(emoji)
-        return renderEmoji(emoji, url)
-      },
-      toUrl: (id) => {
-        if (ref.isBlob(id)) return api.blob.sync.url(id)
-        return mentions[id] || id
-      },
-      imageLink: (id) => id
+    return h('Markdown', {
+      hooks: [
+        LoadingBlobHook(api.blob.obs.has)
+      ],
+      innerHTML: renderer.block(content.text, {
+        emoji: (emoji) => {
+          var url = emojiMentions[emoji]
+            ? api.blob.sync.url(emojiMentions[emoji])
+            : api.emoji.sync.url(emoji)
+          return renderEmoji(emoji, url)
+        },
+        toUrl: (id) => {
+          if (ref.isBlob(id)) return api.blob.sync.url(id)
+          return mentions[id] || id
+        },
+        imageLink: (id) => id
+      })
     })
-
-    return md
   }
 
   function renderEmoji (emoji, url) {
@@ -56,5 +60,28 @@ exports.create = function (api) {
         class="emoji"
       >
     `
+  }
+}
+
+function LoadingBlobHook (hasBlob) {
+  return function (element) {
+    var releases = []
+    element.querySelectorAll('img').forEach(img => {
+      var id = ref.extract(img.src)
+      if (id) {
+        releases.push(watch(hasBlob(id), has => {
+          if (has === false) {
+            img.classList.add('-pending')
+          } else {
+            img.classList.remove('-pending')
+          }
+        }))
+      }
+    })
+    return function () {
+      while (releases.length) {
+        releases.pop()()
+      }
+    }
   }
 }
