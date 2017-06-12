@@ -29,11 +29,8 @@ exports.gives = {
       log: true,
       userFeed: true,
       messagesByType: true,
-      query: true,
       feed: true,
       links: true,
-      search: true,
-      replicateProgress: true,
       backlinks: true
     },
     obs: {
@@ -173,9 +170,6 @@ exports.create = function (api) {
         })
       },
       pull: {
-        query: rec.source(query => {
-          return sbot.query.read(query)
-        }),
         backlinks: rec.source(query => {
           return sbot.backlinks.read(query)
         }),
@@ -199,12 +193,6 @@ exports.create = function (api) {
         }),
         links: rec.source(function (query) {
           return sbot.links(query)
-        }),
-        search: rec.source(function (opts) {
-          return sbot.fulltext.search(opts)
-        }),
-        replicateProgress: rec.source(function (opts) {
-          return sbot.replicate.changes()
         })
       },
       obs: {
