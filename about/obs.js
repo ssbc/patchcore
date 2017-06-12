@@ -41,14 +41,10 @@ exports.create = function (api) {
   })
 
   function get (id) {
-    if (!ref.isFeed(id)) {
-      console.log(id) //throw new Error('About requires an id!')
-      console.trace()
-    }
+    if (!ref.isFeed(id)) throw new Error('About requires an id!')
     if (!cacheLoading) {
       cacheLoading = true
       loadCache()
-      window.things = cache
     }
     if (!cache[id]) {
       cache[id] = About(api, id)
@@ -105,7 +101,7 @@ function About (api, id) {
         var valuesForKey = lastState[key] = lastState[key] || {}
         for (var author in values[key]) {
           var value = values[key][author]
-          if (!valuesForKey[author] || value.lastSeq > valuesForKey[author].lastSeq) {
+          if (!valuesForKey[author] || value[1] > valuesForKey[author][1]) {
             valuesForKey[author] = value
             changed = true
           }
@@ -157,11 +153,11 @@ function highestRank (lookup) {
 }
 
 function getValue (item) {
-  if (item && item.value) {
-    if (typeof item.value === 'string') {
-      return item.value
-    } else if (item.value && item.value.link && ref.isLink(item.value.link)) {
-      return item.value.link
+  if (item && item[0]) {
+    if (typeof item[0] === 'string') {
+      return item[0]
+    } else if (item[0] && item[0].link && ref.isLink(item[0].link)) {
+      return item[0].link
     }
   }
 }
