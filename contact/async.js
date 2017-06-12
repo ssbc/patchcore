@@ -1,9 +1,10 @@
 var nest = require('depnest')
-var pull = require('pull-stream')
+var onceTrue = require('mutant/once-true')
+var resolve = require('mutant/resolve')
 var ref = require('ssb-ref')
 
 exports.needs = nest({
-  'sbot.pull.query': 'first',
+  'contact.obs.following': 'first',
   'sbot.async.publish': 'first'
 })
 
@@ -17,16 +18,11 @@ exports.create = function (api) {
   })
 
   function followerOf (source, dest, cb) {
-    pull(
-      api.sbot.pull.query({query: [
-        makeQuery(source, dest),
-        {$map: ['value', 'content', 'following']}
-      ]}),
-      pull.collect(function (err, ary) {
-        if (err) return cb(err)
-        else cb(null, ary.pop()) // will be true, or undefined/false
-      })
-    )
+    var following = api.contact.obs.following(source)
+    onceTrue(following.sync, () => {
+      var value = resolve(following)
+      cb(null, value && value.has(dest))
+    })
   }
 
   function follow (id, cb) {
@@ -46,17 +42,4 @@ exports.create = function (api) {
       following: false
     }, cb)
   }
-}
-
-function makeQuery (a, b) {
-  return {'$filter': {
-    value: {
-      author: a,
-      content: {
-        type: 'contact',
-        contact: b,
-        following: true
-      }
-    }
-  }}
 }
