@@ -1,47 +1,35 @@
-const pull = require('pull-stream')
 const nest = require('depnest')
-const extend = require('xtend')
+const defer = require('pull-defer')
+const onceTrue = require('mutant/once-true')
 
 exports.gives = nest('feed.pull.private')
 exports.needs = nest({
-  'sbot.pull.log': 'first',
-  'message.sync.unbox': 'first'
+  'sbot.obs.connection': 'first'
 })
 
 exports.create = function (api) {
   return nest('feed.pull.private', function (opts) {
-    var opts = extend(opts)
+    // HACK: needed to select correct index and handle lt
+    opts.query = [
+      {$filter: {
+        timestamp: opts.lt
+          ? {$lt: opts.lt, $gt: 0}
+          : {$gt: 0}
+      }}
+    ]
 
-    // handle limit to ensure we're getting old private messages
-    var limit = opts.limit
-    delete opts.limit
+    delete opts.lt
 
-    var stream = pull(
-      api.sbot.pull.log(opts),
-      unbox()
-    )
-
-    if (limit) {
-      return pull(
-        stream,
-        pull.take(limit)
-      )
-    } else {
-      return stream
-    }
+    return StreamWhenConnected(api.sbot.obs.connection, (sbot) => {
+      return sbot.private.read(opts)
+    })
   })
+}
 
-  // scoped
-
-  function unbox () {
-    return pull(
-      pull.filter(function (msg) {
-        return typeof msg.value.content === 'string'
-      }),
-      pull.map(function (msg) {
-        return api.message.sync.unbox(msg)
-      }),
-      pull.filter(Boolean)
-    )
-  }
+function StreamWhenConnected (connection, fn) {
+  var stream = defer.source()
+  onceTrue(connection, function (connection) {
+    stream.resolve(fn(connection))
+  })
+  return stream
 }
