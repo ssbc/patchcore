@@ -4,6 +4,14 @@ a shared library to build [ssb](https://scuttlebot.io) apps
 
 or _the shared assumptions of all (or most) ssb related applications_
 
+
+## required sbot plugins
+
+- [ssb-private](https://github.com/ssbc/ssb-private)
+- [ssb-backlinks](https://github.com/ssbc/ssb-backlinks)
+- [ssb-about](https://github.com/ssbc/ssb-about)
+- [ssb-contacts](https://github.com/ssbc/ssb-contacts)
+
 ## apps
 
 here's a list of apps in the wild using `patchcore`:
