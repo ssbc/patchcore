@@ -11,17 +11,21 @@ exports.create = function (api) {
     if (typeof channel !== 'string') throw new Error('a channel name be specified')
 
     return function (opts) {
-      var filter = {
-        dest: `#${channel}`,
-        timestamp: opts.lt
-          ? {$lt: opts.lt, $gt: 0}
-          : {$gt: 0}
-      }
+      // handle last item passed in as lt
+      var lt = typeof opts.lt === 'object'
+        ? opts.lt.value.timestamp
+        : opts.lt
 
       delete opts.lt
 
+      var filter = {
+        dest: `#${channel}`,
+        value: {
+          timestamp: lt ? {$lt: lt, $gt: 0} : {$gt: 0}
+        }
+      }
+
       return api.sbot.pull.backlinks(extend(opts, {
-        index: 'DTS', // HACK: force index since flumeview-query is choosing the wrong one
         query: [
           {$filter: filter}
         ]

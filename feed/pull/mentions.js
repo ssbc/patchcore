@@ -21,6 +21,11 @@ exports.create = function (api) {
       var take = opts.limit
       opts.limit = 5000
 
+      // handle last item passed in as lt
+      opts.lt = typeof opts.lt === 'object'
+        ? opts.lt.timestamp
+        : opts.lt
+
       var stream = pull(
         api.sbot.pull.log(opts),
         unboxIfNeeded(),

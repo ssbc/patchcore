@@ -9,16 +9,20 @@ exports.needs = nest({
 
 exports.create = function (api) {
   return nest('feed.pull.private', function (opts) {
+    // handle last item passed in as lt
+    var lt = typeof opts.lt === 'object'
+      ? opts.lt.timestamp
+      : opts.lt
+    delete opts.lt
+
     // HACK: needed to select correct index and handle lt
     opts.query = [
       {$filter: {
-        timestamp: opts.lt
-          ? {$lt: opts.lt, $gt: 0}
+        timestamp: lt
+          ? {$lt: lt, $gt: 0}
           : {$gt: 0}
       }}
     ]
-
-    delete opts.lt
 
     return StreamWhenConnected(api.sbot.obs.connection, (sbot) => {
       return sbot.private.read(opts)

@@ -1,7 +1,13 @@
 const nest = require('depnest')
 
 exports.gives = nest('feed.pull.public')
-exports.needs = nest('sbot.pull.log', 'first')
+exports.needs = nest('sbot.pull.feed', 'first')
 exports.create = function (api) {
-  return nest('feed.pull.public', api.sbot.pull.log)
+  return nest('feed.pull.public', (opts) => {
+    // handle last item passed in as lt
+    opts.lt = typeof opts.lt === 'object'
+      ? opts.lt.value.timestamp
+      : opts.lt
+    return api.sbot.pull.feed(opts)
+  })
 }
