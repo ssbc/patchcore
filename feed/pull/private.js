@@ -1,5 +1,6 @@
 const nest = require('depnest')
 const defer = require('pull-defer')
+const pull = require('pull-stream')
 const onceTrue = require('mutant/once-true')
 
 exports.gives = nest('feed.pull.private')
@@ -25,6 +26,7 @@ exports.create = function (api) {
     ]
 
     return StreamWhenConnected(api.sbot.obs.connection, (sbot) => {
+      if (!sbot.private || !sbot.private.read) return pull.empty()
       return sbot.private.read(opts)
     })
   })
