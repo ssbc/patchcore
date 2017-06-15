@@ -1,4 +1,6 @@
 var pull = require('pull-stream')
+var defer = require('pull-defer')
+var { onceTrue } = require('mutant')
 var ref = require('ssb-ref')
 var Reconnect = require('pull-reconnect')
 var createClient = require('ssb-client')
@@ -31,7 +33,8 @@ exports.gives = {
       messagesByType: true,
       feed: true,
       links: true,
-      backlinks: true
+      backlinks: true,
+      stream: true
     },
     obs: {
       connectionStatus: true,
@@ -193,7 +196,14 @@ exports.create = function (api) {
         }),
         links: rec.source(function (query) {
           return sbot.links(query)
-        })
+        }),
+        stream: function (fn) {
+          var stream = defer.source()
+          onceTrue(connection, function (connection) {
+            stream.resolve(fn(connection))
+          })
+          return stream
+        }
       },
       obs: {
         connectionStatus: (listener) => connectionStatus(listener),

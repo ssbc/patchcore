@@ -5,7 +5,7 @@ var pull = require('pull-stream')
 var ref = require('ssb-ref')
 
 exports.needs = nest({
-  'sbot.obs.connection': 'first'
+  'sbot.pull.stream': 'first'
 })
 
 exports.gives = nest({
@@ -45,7 +45,7 @@ exports.create = function (api) {
 
   function loadCache () {
     pull(
-      StreamWhenConnected(api.sbot.obs.connection, sbot => sbot.contacts.stream({live: true})),
+      api.sbot.pull.stream(sbot => sbot.contacts.stream({live: true})),
       pull.drain(item => {
         for (var target in item) {
           if (ref.isFeed(target)) {
@@ -121,10 +121,3 @@ function isContact (msg) {
   return msg.value && msg.value.content && msg.value.content.type === 'contact'
 }
 
-function StreamWhenConnected (connection, fn) {
-  var stream = defer.source()
-  onceTrue(connection, function (connection) {
-    stream.resolve(fn(connection))
-  })
-  return stream
-}

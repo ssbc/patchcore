@@ -6,7 +6,7 @@ var ref = require('ssb-ref')
 var colorHash = new (require('color-hash'))()
 
 exports.needs = nest({
-  'sbot.obs.connection': 'first',
+  'sbot.pull.stream': 'first',
   'blob.sync.url': 'first',
   'keys.sync.id': 'first'
 })
@@ -54,7 +54,7 @@ exports.create = function (api) {
 
   function loadCache () {
     pull(
-      StreamWhenConnected(api.sbot.obs.connection, sbot => sbot.about.stream({live: true})),
+      api.sbot.pull.stream(sbot => sbot.about.stream({live: true})),
       pull.drain(item => {
         for (var target in item) {
           if (ref.isFeed(target)) {
