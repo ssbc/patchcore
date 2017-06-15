@@ -162,10 +162,3 @@ function getValue (item) {
   }
 }
 
-function StreamWhenConnected (connection, fn) {
-  var stream = defer.source()
-  onceTrue(connection, function (connection) {
-    stream.resolve(fn(connection))
-  })
-  return stream
-}
