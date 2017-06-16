@@ -36,7 +36,7 @@ exports.create = function (api) {
       description: (id) => value(id, 'description'),
       image: (id) => value(id, 'image'),
       names: (id) => values(id, 'name'),
-      images: (id) => values(id, 'images'),
+      images: (id) => values(id, 'image'),
       color: (id) => computed(id, (id) => colorHash.hex(id)),
       imageUrl: (id) => computed(value(id, 'image'), (blobId) => {
         return blobId ? api.blob.sync.url(blobId) : fallbackImageUrl
@@ -56,7 +56,7 @@ exports.create = function (api) {
 
   function values (id, key) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    return computed([get(id), 'name'], allValues)
+    return computed([get(id), key], allValues)
   }
 
   function get (id) {
