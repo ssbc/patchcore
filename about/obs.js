@@ -1,9 +1,9 @@
-var {Value, computed, onceTrue} = require('mutant')
-var defer = require('pull-defer')
+var {Value, computed} = require('mutant')
 var pull = require('pull-stream')
 var nest = require('depnest')
 var ref = require('ssb-ref')
 var colorHash = new (require('color-hash'))()
+var fallbackImageUrl = 'data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
 
 exports.needs = nest({
   'sbot.pull.stream': 'first',
@@ -19,97 +19,86 @@ exports.gives = nest({
     'imageUrl',
     'names',
     'images',
-    'color'
+    'color',
+    'value',
+    'values'
   ]
 })
 
 exports.create = function (api) {
   var sync = Value(false)
-  var cache = {}
-  var cacheLoading = false
+  var cache = null
 
   return nest({
     'about.obs': {
-      name: (id) => get(id).name,
-      description: (id) => get(id).description,
-      image: (id) => get(id).image,
-      imageUrl: (id) => get(id).imageUrl,
-      names: (id) => get(id).names,
-      images: (id) => get(id).images,
-      color: (id) => computed(id, (id) => colorHash.hex(id))
+      // quick helpers, probably should deprecate!
+      name: (id) => value(id, 'name', id.slice(1, 10)),
+      description: (id) => value(id, 'description'),
+      image: (id) => value(id, 'image'),
+      names: (id) => values(id, 'name'),
+      images: (id) => values(id, 'images'),
+      color: (id) => computed(id, (id) => colorHash.hex(id)),
+      imageUrl: (id) => computed(value(id, 'image'), (blobId) => {
+        return blobId ? api.blob.sync.url(blobId) : fallbackImageUrl
+      }),
+
+      // custom abouts (the future!)
+      value,
+      values
     }
   })
 
+  function value (id, key, defaultValue) {
+    if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
+    var yourId = api.keys.sync.id()
+    return computed([get(id), key, id, yourId, defaultValue], socialValue)
+  }
+
+  function values (id, key) {
+    if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
+    return computed([get(id), 'name'], allValues)
+  }
+
   function get (id) {
-    if (!ref.isFeed(id)) throw new Error('About requires an id!')
-    if (!cacheLoading) {
-      cacheLoading = true
-      loadCache()
-    }
+    if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
+    load()
     if (!cache[id]) {
-      cache[id] = About(api, id)
+      cache[id] = Value({})
     }
     return cache[id]
   }
 
-  function loadCache () {
-    pull(
-      api.sbot.pull.stream(sbot => sbot.about.stream({live: true})),
-      pull.drain(item => {
-        for (var target in item) {
-          if (ref.isFeed(target)) {
-            get(target).push(item[target])
+  function load () {
+    if (!cache) {
+      cache = {}
+      pull(
+        api.sbot.pull.stream(sbot => sbot.about.stream({live: true})),
+        pull.drain(item => {
+          for (var target in item) {
+            var state = get(target)
+            var lastState = state()
+            var values = item[target]
+            var changed = false
+            for (var key in values) {
+              var valuesForKey = lastState[key] = lastState[key] || {}
+              for (var author in values[key]) {
+                var value = values[key][author]
+                if (!valuesForKey[author] || value[1] > valuesForKey[author][1]) {
+                  valuesForKey[author] = value
+                  changed = true
+                }
+              }
+            }
+            if (changed) {
+              state.set(lastState)
+            }
           }
-        }
 
-        if (!sync()) {
-          sync.set(true)
-        }
-      })
-    )
-  }
-}
-
-function About (api, id) {
-  // transparent image
-  var fallbackImageUrl = 'data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
-
-  var state = Value({})
-  var yourId = api.keys.sync.id()
-  var image = computed([state, 'image', id, yourId], socialValue)
-  var name = computed([state, 'name', id, yourId, id.slice(1, 10)], socialValue)
-  var description = computed([state, 'description', id, yourId], socialValue)
-
-  return {
-    name,
-    image,
-    description,
-    names: computed([state, 'name', id, yourId, id.slice(1, 10)], allValues),
-    images: computed([state, 'image', id, yourId], allValues),
-    descriptions: computed([state, 'description', id, yourId], allValues),
-    imageUrl: computed(image, (blobId) => {
-      if (blobId) {
-        return api.blob.sync.url(blobId)
-      } else {
-        return fallbackImageUrl
-      }
-    }),
-    push: function (values) {
-      var lastState = state()
-      var changed = false
-      for (var key in values) {
-        var valuesForKey = lastState[key] = lastState[key] || {}
-        for (var author in values[key]) {
-          var value = values[key][author]
-          if (!valuesForKey[author] || value[1] > valuesForKey[author][1]) {
-            valuesForKey[author] = value
-            changed = true
+          if (!sync()) {
+            sync.set(true)
           }
-        }
-      }
-      if (changed) {
-        state.set(lastState)
-      }
+        })
+      )
     }
   }
 }
@@ -123,7 +112,7 @@ function socialValue (lookup, key, id, yourId, fallback) {
   }
 }
 
-function allValues (lookup, key, id, yourId) {
+function allValues (lookup, key) {
   var values = {}
   for (var author in lookup[key]) {
     var value = getValue(lookup[key][author])
@@ -161,4 +150,3 @@ function getValue (item) {
     }
   }
 }
-
