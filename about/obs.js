@@ -20,8 +20,10 @@ exports.gives = nest({
     'names',
     'images',
     'color',
-    'value',
-    'values'
+    'latestValue',
+    'valueFrom',
+    'socialValue',
+    'groupedValues'
   ]
 })
 
@@ -32,31 +34,44 @@ exports.create = function (api) {
   return nest({
     'about.obs': {
       // quick helpers, probably should deprecate!
-      name: (id) => value(id, 'name', id.slice(1, 10)),
-      description: (id) => value(id, 'description'),
-      image: (id) => value(id, 'image'),
-      names: (id) => values(id, 'name'),
-      images: (id) => values(id, 'image'),
+      name: (id) => socialValue(id, 'name', id.slice(1, 10)),
+      description: (id) => socialValue(id, 'description'),
+      image: (id) => socialValue(id, 'image'),
+      names: (id) => groupedValues(id, 'name'),
+      images: (id) => groupedValues(id, 'image'),
       color: (id) => computed(id, (id) => colorHash.hex(id)),
-      imageUrl: (id) => computed(value(id, 'image'), (blobId) => {
+      imageUrl: (id) => computed(socialValue(id, 'image'), (blobId) => {
         return blobId ? api.blob.sync.url(blobId) : fallbackImageUrl
       }),
 
       // custom abouts (the future!)
-      value,
-      values
+      valueFrom,
+      latestValue,
+      socialValue,
+      groupedValues
     }
   })
 
-  function value (id, key, defaultValue) {
+
+  function valueFrom (id, key, author) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    var yourId = api.keys.sync.id()
-    return computed([get(id), key, id, yourId, defaultValue], socialValue)
+    return computed([get(id), key, author], getValueFrom)
   }
 
-  function values (id, key) {
+  function latestValue (id, key) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    return computed([get(id), key], allValues)
+    return computed([get(id), key], getLatestValue)
+  }
+
+  function socialValue (id, key, defaultValue) {
+    if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
+    var yourId = api.keys.sync.id()
+    return computed([get(id), key, id, yourId, defaultValue], getSocialValue)
+  }
+
+  function groupedValues (id, key) {
+    if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
+    return computed([get(id), key], getGroupedValues)
   }
 
   function get (id) {
@@ -103,7 +118,7 @@ exports.create = function (api) {
   }
 }
 
-function socialValue (lookup, key, id, yourId, fallback) {
+function getSocialValue (lookup, key, id, yourId, fallback) {
   var result = lookup[key] ? getValue(lookup[key][yourId]) || getValue(lookup[key][id]) || highestRank(lookup[key]) : null
   if (result != null) {
     return result
@@ -112,7 +127,7 @@ function socialValue (lookup, key, id, yourId, fallback) {
   }
 }
 
-function allValues (lookup, key) {
+function getGroupedValues (lookup, key) {
   var values = {}
   for (var author in lookup[key]) {
     var value = getValue(lookup[key][author])
@@ -145,8 +160,34 @@ function getValue (item) {
   if (item && item[0]) {
     if (typeof item[0] === 'string') {
       return item[0]
-    } else if (item[0] && item[0].link && ref.isLink(item[0].link)) {
+    } else if (item[0] && item[0].link && ref.isLink(item[0].link) && !item[0].remove) {
       return item[0].link
     }
+  }
+}
+
+function getLatestValue (lookup, key) {
+  var latestTime = 0
+  var latestValue = null
+
+  if (lookup[key]) {
+    for (var author in lookup[key]) {
+      if (Array.isArray(lookup[key][author])) {
+        var value = lookup[key][author][0]
+        var timestamp = lookup[key][author][1]
+        if (timestamp > latestTime) {
+          latestTime = timestamp
+          latestValue = value
+        }
+      }
+    }
+  }
+
+  return latestValue
+}
+
+function getValueFrom (lookup, key, author) {
+  if (lookup[key] && Array.isArray(lookup[key][author])) {
+    return lookup[key][author][0]
   }
 }
