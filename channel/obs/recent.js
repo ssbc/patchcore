@@ -1,7 +1,7 @@
 var nest = require('depnest')
 var pull = require('pull-stream')
 
-var { Value, Dict, Struct, computed, resolve } = require('mutant')
+var { Value, Dict, Struct, computed, resolve, throttle } = require('mutant')
 
 exports.needs = nest({
   'sbot.pull.backlinks': 'first'
@@ -81,10 +81,10 @@ exports.create = function (api) {
           sync.set(true)
         })
       )
-      recentChannels = computed(channelsLookup, (lookup) => {
+      recentChannels = computed(throttle(channelsLookup, 1000), (lookup) => {
         var values = Object.keys(lookup).map(x => lookup[x]).sort((a, b) => b.updatedAt - a.updatedAt).map(x => x.id.slice(1))
         return values
-      }, {nextTick: true})
+      })
       recentChannels.sync = sync
     }
   }
