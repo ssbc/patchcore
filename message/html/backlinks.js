@@ -23,7 +23,7 @@ exports.create = function (api) {
       h('MessageBacklinks', [
         h('header', 'backlinks:'),
         h('ul', [
-          map(backlinks, (backlink) => {
+          map(references, (backlink) => {
             return h('li', [
               h('a -backlink', { href: backlink.id, title: backlink.id }, api.message.obs.name(backlink.id))
             ])
