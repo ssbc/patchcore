@@ -52,3 +52,4 @@ function titleFromMarkdown (text, max) {
   }
   return text
 }
+

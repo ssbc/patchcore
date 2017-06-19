@@ -19,7 +19,7 @@ exports.create = function (api) {
     return function getStream (opts) {
       opts = extend(opts)
       var take = opts.limit
-      opts.limit = 5000
+      opts.limit = 100
 
       var stream = pull(
         api.sbot.pull.log(opts),

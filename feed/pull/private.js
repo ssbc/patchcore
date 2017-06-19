@@ -13,22 +13,23 @@ exports.create = function (api) {
     var opts = extend(opts)
 
     // handle limit to ensure we're getting old private messages
+    opts.limit = 500
     var limit = opts.limit
-    delete opts.limit
-
+///    delete opts.limit
+    
     var stream = pull(
       api.sbot.pull.log(opts),
       unbox()
     )
-
-    if (limit) {
-      return pull(
-        stream,
-        pull.take(limit)
-      )
-    } else {
-      return stream
-    }
+//
+//    if (limit) {
+//      return pull(
+//        stream,
+//        pull.take(limit)
+//      )
+//    } else {
+//      return stream
+//    }
   })
 
   // scoped

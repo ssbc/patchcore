@@ -91,6 +91,15 @@ exports.create = function (api) {
 
   var feed = createFeed(internal, keys, {remote: true})
 
+  var log = rec.source(opts => {
+    if(!opts.limit)
+      console.error(new Error('log stream without limit!:'+JSON.stringify(opts)))
+    return pull(
+      sbot.createLogStream(opts),
+      pull.through(runHooks)
+    )
+  })
+
   return {
     sbot: {
       sync: {
@@ -187,12 +196,10 @@ exports.create = function (api) {
             pull.through(runHooks)
           )
         }),
-        log: rec.source(opts => {
-          return pull(
-            sbot.createLogStream(opts),
-            pull.through(runHooks)
-          )
-        }),
+        log: function (opts) {
+          if(!opts.limit) console.error(new Error('no limit:'+JSON.stringify(opts)))
+          return log(opts)
+        },
         links: rec.source(function (query) {
           return sbot.links(query)
         }),
@@ -248,3 +255,7 @@ function Hash (onHash) {
     onHash && onHash(err, h)
   })
 }
+
+
+
+
