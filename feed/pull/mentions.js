@@ -22,7 +22,7 @@ exports.create = function (api) {
       opts.limit = 5000
 
       // handle last item passed in as lt
-      opts.lt = typeof opts.lt === 'object'
+      var lt = (opts.lt && typeof opts.lt === 'object')
         ? opts.lt.timestamp
         : opts.lt
 

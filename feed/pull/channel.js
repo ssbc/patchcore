@@ -12,7 +12,7 @@ exports.create = function (api) {
 
     return function (opts) {
       // handle last item passed in as lt
-      var lt = typeof opts.lt === 'object'
+      var lt = (opts.lt && typeof opts.lt === 'object')
         ? opts.lt.value.timestamp
         : opts.lt
 

@@ -8,7 +8,7 @@ exports.create = function (api) {
     // handle last item passed in as lt
     return function (opts) {
       opts = extend(opts, {
-        id, lt: typeof opts.lt === 'object' ? opts.lt.value.sequence : opts.lt
+        id, lt: (opts.lt && typeof opts.lt === 'object') ? opts.lt.value.sequence : opts.lt
       })
       return api.sbot.pull.userFeed(opts)
     }

@@ -11,7 +11,7 @@ exports.create = function (api) {
       opts = extend(opts, {
         type,
         // handle last item passed in as lt
-        lt: typeof opts.lt === 'object' ? opts.lt.timestamp : opts.lt
+        lt: opts.lt && typeof opts.lt === 'object' ? opts.lt.timestamp : opts.lt
       })
 
       return api.sbot.pull.messagesByType(opts)
