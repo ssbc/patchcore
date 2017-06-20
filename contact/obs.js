@@ -16,6 +16,7 @@ exports.gives = nest({
 exports.create = function (api) {
   var cacheLoading = false
   var cache = {}
+  var state = {}
   var sync = Value(false)
 
   return nest({
@@ -49,7 +50,9 @@ exports.create = function (api) {
       pull.drain(item => {
         for (var target in item) {
           if (ref.isFeed(target)) {
-            get(target).push(item[target])
+            state[target] = item[target]
+            if(cache[target])
+              get(target).push(item[target])
           }
         }
 
@@ -68,6 +71,7 @@ exports.create = function (api) {
     }
     if (!cache[id]) {
       cache[id] = Contact(api, id, sync)
+      cache[id].push(state[id])
     }
     return cache[id]
   }
@@ -120,4 +124,7 @@ function getIds (state, key, compare) {
 function isContact (msg) {
   return msg.value && msg.value.content && msg.value.content.type === 'contact'
 }
+
+
+
 
