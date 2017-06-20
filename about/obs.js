@@ -30,7 +30,7 @@ exports.gives = nest({
 exports.create = function (api) {
   var sync = Value(false)
   var cache = null
-
+  var data = {}
   return nest({
     'about.obs': {
       // quick helpers, probably should deprecate!
@@ -79,6 +79,7 @@ exports.create = function (api) {
     load()
     if (!cache[id]) {
       cache[id] = Value({})
+      cache[id].set(data[id] || {})
     }
     return cache[id]
   }
@@ -90,22 +91,25 @@ exports.create = function (api) {
         api.sbot.pull.stream(sbot => sbot.about.stream({live: true})),
         pull.drain(item => {
           for (var target in item) {
-            var state = get(target)
-            var lastState = state()
-            var values = item[target]
-            var changed = false
-            for (var key in values) {
-              var valuesForKey = lastState[key] = lastState[key] || {}
-              for (var author in values[key]) {
-                var value = values[key][author]
-                if (!valuesForKey[author] || value[1] > valuesForKey[author][1]) {
-                  valuesForKey[author] = value
-                  changed = true
+            data[target] = item[target]
+            if(cache[target]) {
+              var state = get(target)
+              var lastState = state()
+              var values = item[target]
+              var changed = false
+              for (var key in values) {
+                var valuesForKey = lastState[key] = lastState[key] || {}
+                for (var author in values[key]) {
+                  var value = values[key][author]
+                  if (!valuesForKey[author] || value[1] > valuesForKey[author][1]) {
+                    valuesForKey[author] = value
+                    changed = true
+                  }
                 }
               }
-            }
-            if (changed) {
-              state.set(lastState)
+              if (changed) {
+                state.set(lastState)
+              }
             }
           }
 
