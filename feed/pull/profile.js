@@ -1,5 +1,6 @@
 const nest = require('depnest')
 const extend = require('xtend')
+const pull = require('pull-stream')
 
 exports.gives = nest('feed.pull.profile')
 exports.needs = nest('sbot.pull.userFeed', 'first')
@@ -10,7 +11,12 @@ exports.create = function (api) {
       opts = extend(opts, {
         id, lt: (opts.lt && typeof opts.lt === 'object') ? opts.lt.value.sequence : opts.lt
       })
-      return api.sbot.pull.userFeed(opts)
+      return pull(
+        api.sbot.pull.userFeed(opts),
+        pull.filter(msg => {
+          return typeof msg.value.content !== 'string'
+        })
+      )
     }
   })
 }
