@@ -1,6 +1,5 @@
 var nest = require('depnest')
-var {Value, onceTrue, computed} = require('mutant')
-var defer = require('pull-defer')
+var {Value, computed} = require('mutant')
 var pull = require('pull-stream')
 var ref = require('ssb-ref')
 
@@ -20,20 +19,21 @@ exports.create = function (api) {
 
   return nest({
     'contact.obs': {
-      following: (id) => get(id).following,
-      followers: (id) => get(id).followers
+      following: (id) => values(get(id), 'following', true),
+      followers: (id) => values(get(id), 'followers', true)
     },
     'sbot.hook.publish': function (msg) {
       if (isContact(msg)) {
+        // HACK: make interface more responsive when sbot is busy
         var source = msg.value.author
         var dest = msg.value.content.contact
         if (typeof msg.value.content.following === 'boolean') {
-          get(source).push({
+          update(source, {
             following: {
               [dest]: [msg.value.content]
             }
           })
-          get(dest).push({
+          update(dest, {
             followers: {
               [source]: [msg.value.content]
             }
@@ -43,14 +43,18 @@ exports.create = function (api) {
     }
   })
 
+  function values (state, key, compare) {
+    var obs = computed([state, key, compare], getIds)
+    obs.sync = sync
+    return obs
+  }
+
   function loadCache () {
     pull(
       api.sbot.pull.stream(sbot => sbot.contacts.stream({live: true})),
       pull.drain(item => {
         for (var target in item) {
-          if (ref.isFeed(target)) {
-            get(target).push(item[target])
-          }
+          if (ref.isFeed(target)) update(target, item[target])
         }
 
         if (!sync()) {
@@ -60,6 +64,25 @@ exports.create = function (api) {
     )
   }
 
+  function update (id, values) {
+    var state = get(id)
+    var lastState = state()
+    var changed = false
+    for (var key in values) {
+      var valuesForKey = lastState[key] = lastState[key] || {}
+      for (var dest in values[key]) {
+        var value = values[key][dest]
+        if (!valuesForKey[dest] || value[1] > valuesForKey[dest][1] || !values[1] || !valuesForKey[dest[1]]) {
+          valuesForKey[dest] = value
+          changed = true
+        }
+      }
+    }
+    if (changed) {
+      state.set(lastState)
+    }
+  }
+
   function get (id) {
     if (!ref.isFeed(id)) throw new Error('Contact state requires an id!')
     if (!cacheLoading) {
@@ -67,41 +90,10 @@ exports.create = function (api) {
       loadCache()
     }
     if (!cache[id]) {
-      cache[id] = Contact(api, id, sync)
+      cache[id] = Value({})
     }
     return cache[id]
   }
-}
-
-function Contact (api, id, sync) {
-  var state = Value({})
-  return {
-    following: computedIds(state, 'following', true, sync),
-    followers: computedIds(state, 'followers', true, sync),
-    push: function (values) {
-      var lastState = state()
-      var changed = false
-      for (var key in values) {
-        var valuesForKey = lastState[key] = lastState[key] || {}
-        for (var dest in values[key]) {
-          var value = values[key][dest]
-          if (!valuesForKey[dest] || value[1] > valuesForKey[dest][1] || !values[1] || !valuesForKey[dest[1]]) {
-            valuesForKey[dest] = value
-            changed = true
-          }
-        }
-      }
-      if (changed) {
-        state.set(lastState)
-      }
-    }
-  }
-}
-
-function computedIds (state, key, compare, sync) {
-  var obs = computed([state, key, true], getIds)
-  obs.sync = sync
-  return obs
 }
 
 function getIds (state, key, compare) {
@@ -113,11 +105,9 @@ function getIds (state, key, compare) {
       }
     }
   }
-
   return result
 }
 
 function isContact (msg) {
   return msg.value && msg.value.content && msg.value.content.type === 'contact'
 }
-
