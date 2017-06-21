@@ -18,7 +18,8 @@ exports.gives = nest('feed.pull.rollup', true)
 exports.create = function (api) {
   return nest('feed.pull.rollup', function (rootFilter) {
     return pull(
-      Roots(),
+      pull.map(msg => api.message.sync.root(msg) || msg.key),
+      pull.unique(),
       Lookup(),
       pull.filter(msg => msg && msg.value && !api.message.sync.root(msg)),
       pull.filter(rootFilter || (() => true)),
@@ -27,21 +28,6 @@ exports.create = function (api) {
   })
 
   // scoped
-
-  function Roots () {
-    var alreadyEmitted = new Set()
-    return pull(
-      pull.map((msg) => {
-        var root = api.message.sync.root(msg) || msg.key
-        if (!alreadyEmitted.has(root)) {
-          alreadyEmitted.add(root)
-          return root
-        }
-      }),
-      pull.filter()
-    )
-  }
-
   function Lookup () {
     return pull.asyncMap((key, cb) => {
       api.sbot.async.get(key, (_, value) => {
