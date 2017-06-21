@@ -19,7 +19,7 @@ exports.create = function (api) {
     // HACK: needed to select correct index and handle lt
     opts.query = [
       {$filter: {
-        timestamp: lt
+        timestamp: typeof lt === 'number'
           ? {$lt: lt, $gt: 0}
           : {$gt: 0}
       }}
