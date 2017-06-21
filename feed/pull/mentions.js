@@ -15,7 +15,7 @@ exports.create = function (api) {
 
     return function getStream (opts) {
       // handle last item passed in as lt
-      var lt = (opts.lt && typeof opts.lt === 'object')
+      var lt = (opts.lt && opts.lt.value)
         ? opts.lt.timestamp
         : opts.lt
 

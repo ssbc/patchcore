@@ -5,7 +5,7 @@ exports.needs = nest('sbot.pull.feed', 'first')
 exports.create = function (api) {
   return nest('feed.pull.public', (opts) => {
     // handle last item passed in as lt
-    opts.lt = (opts.lt && typeof opts.lt === 'object')
+    opts.lt = (opts.lt && opts.lt.value)
       ? opts.lt.value.timestamp
       : opts.lt
     return api.sbot.pull.feed(opts)

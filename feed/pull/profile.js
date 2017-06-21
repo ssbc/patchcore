@@ -9,7 +9,7 @@ exports.create = function (api) {
     // handle last item passed in as lt
     return function (opts) {
       opts = extend(opts, {
-        id, lt: (opts.lt && typeof opts.lt === 'object') ? opts.lt.value.sequence : opts.lt
+        id, lt: (opts.lt && opts.lt.value) ? opts.lt.value.sequence : opts.lt
       })
       return pull(
         api.sbot.pull.userFeed(opts),
