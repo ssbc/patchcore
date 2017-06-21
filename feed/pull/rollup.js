@@ -31,7 +31,7 @@ exports.create = function (api) {
   function Lookup () {
     return pull.asyncMap((key, cb) => {
       api.sbot.async.get(key, (_, value) => {
-        if (typeof value.content === 'string') {
+        if (value && typeof value.content === 'string') {
           value = api.message.sync.unbox(value)
         }
         cb(null, {key, value})
