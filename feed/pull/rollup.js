@@ -45,7 +45,7 @@ exports.create = function (api) {
         api.sbot.pull.backlinks({
           query: [{$filter: { dest: rootMessage.key }}]
         }),
-        pull.filter(msg => api.message.sync.root(msg) || rootMessage.key === rootMessage.key),
+        pull.filter(msg => (api.message.sync.root(msg) || rootMessage.key) === rootMessage.key),
         pull.collect((err, replies) => {
           if (err) return cb(err)
           cb(null, extend(rootMessage, { replies }))
