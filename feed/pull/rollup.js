@@ -5,6 +5,7 @@
 var pull = require('pull-stream')
 var nest = require('depnest')
 var extend = require('xtend')
+var HLRU = require('hashlru')
 
 exports.needs = nest({
   'sbot.pull.backlinks': 'first',
@@ -16,41 +17,85 @@ exports.needs = nest({
 exports.gives = nest('feed.pull.rollup', true)
 
 exports.create = function (api) {
+  // cache mostly just to avoid reading the same roots over and over again
+  // not really big enough for multiple refresh cycles
+  var cache = HLRU(100)
+
   return nest('feed.pull.rollup', function (rootFilter) {
+    var seen = new Set()
     return pull(
-      pull.map(msg => api.message.sync.root(msg) || msg.key),
-      pull.unique(),
-      Lookup(),
+      pull.map(msg => {
+        if (msg.value) {
+          var root = api.message.sync.root(msg)
+          if (!root) {
+            // already a root, pass thru!
+            return msg
+          } else {
+            return root
+          }
+        }
+      }),
+
+      // UNIQUE
+      pull.filter(idOrMsg => {
+        if (idOrMsg) {
+          if (idOrMsg.key) idOrMsg = idOrMsg.key
+          if (typeof idOrMsg === 'string') {
+            var key = idOrMsg
+            if (!seen.has(key)) {
+              seen.add(key)
+              return true
+            }
+          }
+        }
+      }),
+
+      // LOOKUP (if needed)
+      pull.asyncMap((keyOrMsg, cb) => {
+        if (keyOrMsg.value) {
+          cb(null, keyOrMsg)
+        } else {
+          var key = keyOrMsg
+          if (cache.has(key)) {
+            cb(null, cache.get(key))
+          } else {
+            api.sbot.async.get(key, (_, value) => {
+              var msg = {key, value}
+              if (msg.value) {
+                cache.set(key, msg)
+              }
+              cb(null, msg)
+            })
+          }
+        }
+      }),
+
+      // UNBOX (if needed)
+      pull.map(msg => {
+        if (msg.value && typeof msg.value.content === 'string') {
+          var unboxed = api.message.sync.unbox(msg)
+          if (unboxed) return unboxed
+        }
+        return msg
+      }),
+
+      // FILTER
       pull.filter(msg => msg && msg.value && !api.message.sync.root(msg)),
       pull.filter(rootFilter || (() => true)),
-      AddReplies()
+
+      // ADD REPLIES
+      pull.asyncMap((rootMessage, cb) => {
+        pull(
+          api.sbot.pull.backlinks({
+            query: [{$filter: { dest: rootMessage.key }}]
+          }),
+          pull.filter(msg => (api.message.sync.root(msg) || rootMessage.key) === rootMessage.key),
+          pull.collect((err, replies) => {
+            if (err) return cb(err)
+            cb(null, extend(rootMessage, { replies }))
+          })
+        )
+      })
     )
   })
-
-  // scoped
-  function Lookup () {
-    return pull.asyncMap((key, cb) => {
-      api.sbot.async.get(key, (_, value) => {
-        if (value && typeof value.content === 'string') {
-          value = api.message.sync.unbox(value)
-        }
-        cb(null, {key, value})
-      })
-    })
-  }
-
-  function AddReplies () {
-    return pull.asyncMap((rootMessage, cb) => {
-      pull(
-        api.sbot.pull.backlinks({
-          query: [{$filter: { dest: rootMessage.key }}]
-        }),
-        pull.filter(msg => (api.message.sync.root(msg) || rootMessage.key) === rootMessage.key),
-        pull.collect((err, replies) => {
-          if (err) return cb(err)
-          cb(null, extend(rootMessage, { replies }))
-        })
-      )
-    })
-  }
 }
