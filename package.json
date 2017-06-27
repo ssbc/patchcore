@@ -40,7 +40,7 @@
     "hashlru": "^2.2.0",
     "html-escape": "^2.0.0",
     "human-time": "0.0.1",
-    "mutant": "^3.21.0",
+    "mutant": "^3.21.1",
     "mutant-pull-reduce": "^1.1.0",
     "pull-abortable": "^4.1.0",
     "pull-cat": "^1.1.11",
