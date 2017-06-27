@@ -5,6 +5,7 @@ const {resolve, onceTrue} = require('mutant')
 exports.needs = nest({
   'sbot.async.get': 'first',
   'sbot.pull.links': 'first',
+  'message.sync.unbox': 'first',
   'about.obs.socialValue': 'first',
   'keys.sync.id': 'first'
 })
@@ -17,6 +18,10 @@ exports.create = function (api) {
     if (!ref.isLink(id)) throw new Error('an id must be specified')
     var fallbackName = id.substring(0, 10) + '...'
     api.sbot.async.get(id, function (err, value) {
+      if (value && typeof value.content === 'string') {
+        value = api.message.sync.unbox(value)
+      }
+
       if (err && err.name === 'NotFoundError') {
         return cb(null, fallbackName + '...(missing)')
       } else if (value.content.type === 'post' && typeof value.content.text === 'string') {
