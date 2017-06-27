@@ -43,7 +43,6 @@ exports.create = function (api) {
     var title = api.about.obs.socialValue(id, 'title')
 
     onceTrue(name.sync, () => {
-      console.log(id, resolve(name), resolve(title))
       cb(null, resolve(name) || resolve(title) || id.substring(0, 10) + '...')
     })
   }
