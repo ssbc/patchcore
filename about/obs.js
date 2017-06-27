@@ -28,7 +28,8 @@ exports.gives = nest({
 })
 
 exports.create = function (api) {
-  var sync = Value(false)
+  var syncValue = Value(false)
+  var sync = computed(syncValue, x => x)
   var cache = null
 
   return nest({
@@ -52,26 +53,30 @@ exports.create = function (api) {
     }
   })
 
-
   function valueFrom (id, key, author) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    return computed([get(id), key, author], getValueFrom)
+    return withSync(computed([get(id), key, author], getValueFrom))
   }
 
   function latestValue (id, key) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    return computed([get(id), key], getLatestValue)
+    return withSync(computed([get(id), key], getLatestValue))
   }
 
   function socialValue (id, key, defaultValue) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
     var yourId = api.keys.sync.id()
-    return computed([get(id), key, id, yourId, defaultValue], getSocialValue)
+    return withSync(computed([get(id), key, id, yourId, defaultValue], getSocialValue))
   }
 
   function groupedValues (id, key) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    return computed([get(id), key], getGroupedValues)
+    return withSync(computed([get(id), key], getGroupedValues))
+  }
+
+  function withSync (obs) {
+    obs.sync = sync
+    return obs
   }
 
   function get (id) {
@@ -109,8 +114,8 @@ exports.create = function (api) {
             }
           }
 
-          if (!sync()) {
-            sync.set(true)
+          if (!syncValue()) {
+            syncValue.set(true)
           }
         })
       )
