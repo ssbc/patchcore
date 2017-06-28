@@ -24,8 +24,10 @@ exports.create = function (api) {
   // this ensures that the data is still available for a page reload
   var timer = setInterval(() => {
     oldRemove.forEach(id => {
-      cache[id].destroy()
-      delete cache[id]
+      if (cache[id]) {
+        cache[id].destroy()
+        delete cache[id]
+      }
     })
     oldRemove.clear()
 
