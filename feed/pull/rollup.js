@@ -6,9 +6,11 @@ var pull = require('pull-stream')
 var nest = require('depnest')
 var extend = require('xtend')
 var HLRU = require('hashlru')
+var resolve = require('mutant/resolve')
+var onceTrue = require('mutant/once-true')
 
 exports.needs = nest({
-  'sbot.pull.backlinks': 'first',
+  'backlinks.obs.for': 'first',
   'sbot.async.get': 'first',
   'message.sync.root': 'first',
   'message.sync.unbox': 'first'
@@ -85,16 +87,14 @@ exports.create = function (api) {
 
       // ADD REPLIES
       pull.asyncMap((rootMessage, cb) => {
-        pull(
-          api.sbot.pull.backlinks({
-            query: [{$filter: { dest: rootMessage.key }}]
-          }),
-          pull.filter(msg => (api.message.sync.root(msg) || rootMessage.key) === rootMessage.key),
-          pull.collect((err, replies) => {
-            if (err) return cb(err)
-            cb(null, extend(rootMessage, { replies }))
+        // use global backlinks cache
+        var backlinks = api.backlinks.obs.for(rootMessage.key)
+        onceTrue(backlinks.sync, () => {
+          var replies = resolve(backlinks).filter((msg) => {
+            return (api.message.sync.root(msg) || rootMessage.key) === rootMessage.key
           })
-        )
+          cb(null, extend(rootMessage, { replies }))
+        })
       })
     )
   })

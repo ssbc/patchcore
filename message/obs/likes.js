@@ -1,13 +1,14 @@
 var nest = require('depnest')
 var ref = require('ssb-ref')
-var MutantPullReduce = require('mutant-pull-reduce')
-var SortedArray = require('sorted-array-functions')
+var MutantArray = require('mutant/array')
+var concat = require('mutant/concat')
+var watch = require('mutant/watch')
 
 var { computed } = require('mutant')
 
 exports.needs = nest({
   'message.sync.unbox': 'first',
-  'sbot.pull.backlinks': 'first'
+  'backlinks.obs.for': 'first'
 })
 
 exports.gives = nest({
@@ -31,14 +32,7 @@ exports.create = function (api) {
 
       activeLikes.forEach((likes) => {
         if (likes.id === c.vote.link) {
-          likes.push({
-            dest: c.vote.link,
-            id: msg.key,
-            expression: c.vote.expression,
-            value: c.vote.value,
-            timestamp: msg.value.timestamp,
-            author: msg.value.author
-          })
+          likes.push(msg)
         }
       })
     },
@@ -46,58 +40,48 @@ exports.create = function (api) {
       if (!ref.isLink(id)) throw new Error('an id must be specified')
       var obs = get(id)
       obs.id = id
-      return computed(obs, getLikes, {
+      var result = computed(obs, getLikes, {
         // allow manual append for simulated realtime
         onListen: () => activeLikes.add(obs),
         onUnlisten: () => activeLikes.delete(obs)
       })
+      result.sync = obs.sync
+      return result
     }
   })
 
   function get (id) {
-    var likes = MutantPullReduce(api.sbot.pull.backlinks({
-      live: true,
-      query: [
-        {$filter: {
-          dest: id,
-          value: {
-            content: {
-              type: 'vote',
-              vote: { link: id }
+    var backlinks = api.backlinks.obs.for(id)
+    var merge = MutantArray()
+
+    var likes = computed([backlinks.sync, concat([backlinks, merge])], (sync, backlinks) => {
+      if (sync) {
+        return backlinks.reduce((result, msg) => {
+          var c = msg.value.content
+          if (c.type === 'vote' && c.vote && c.vote.link === id) {
+            var value = result[msg.value.author]
+            if (!value || value[0] < msg.value.timestamp) {
+              result[msg.value.author] = [msg.value.timestamp, c.vote.value, c.vote.expression]
             }
           }
-        }},
-        {$map: {
-          dest: 'dest',
-          id: 'key',
-          expression: ['value', 'content', 'vote', 'expression'],
-          value: ['value', 'content', 'vote', 'value'],
-          timestamp: 'timestamp',
-          author: ['value', 'author']
-        }}
-      ]
-    }), (result, msg) => {
-      if (!result[msg.author]) {
-        result[msg.author] = []
+          return result
+        }, {})
+      } else {
+        return {}
       }
-      SortedArray.add(result[msg.author], msg, mostRecent)
-      return result
-    }, {
-      startValue: []
     })
+
+    likes.push = merge.push
+    likes.sync = backlinks.sync
     return likes
   }
 }
 
 function getLikes (likes) {
   return Object.keys(likes).reduce((result, id) => {
-    if (likes[id][0].value) {
+    if (likes[id][1] > 0) {
       result.push(id)
     }
     return result
   }, [])
-}
-
-function mostRecent (a, b) {
-  return b.timestamp - a.timestamp
 }
