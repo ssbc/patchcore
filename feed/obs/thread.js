@@ -1,15 +1,13 @@
 var nest = require('depnest')
-var pull = require('pull-stream')
-var pullCat = require('pull-cat')
 var sort = require('ssb-sort')
 var ref = require('ssb-ref')
-var { map, computed } = require('mutant')
+var { Array: MutantArray, Value, map, concat, computed } = require('mutant')
 
 exports.needs = nest({
-  'sbot.pull.links': 'first',
+  'backlinks.obs.for': 'first',
   'sbot.async.get': 'first',
-  'lib.obs.pullLookup': 'first',
-  'message.sync.unbox': 'first'
+  'message.sync.unbox': 'first',
+  'message.sync.root': 'first'
 })
 
 exports.gives = nest('feed.obs.thread')
@@ -19,36 +17,37 @@ exports.create = function (api) {
 
   function thread (rootId, { branch } = {}) {
     if (!ref.isLink(rootId)) throw new Error('an id must be specified')
+    var sync = Value(false)
 
-    var rootMessageStream = pull(
-      pull.values([rootId]),
-      pull.asyncMap((key, cb) => {
-        return api.sbot.async.get(key, (err, value) => cb(err, {key, value}))
+    var prepend = MutantArray()
+    api.sbot.async.get(rootId, (err, value) => {
+      sync.set(true)
+      if (!err) {
+        prepend.push(
+          Value(unboxIfNeeded({key: rootId, value}))
+        )
+      }
+    })
+
+    var backlinks = api.backlinks.obs.for(rootId)
+    var replies = map(computed(backlinks, (msgs) => {
+      return msgs.filter(msg => {
+        return api.message.sync.root(msg) === rootId && msg.value.content.type !== 'vote'
       })
-    )
-
-    var messageLookup = api.lib.obs.pullLookup(pull(
-      pullCat([
-        rootMessageStream,
-        api.sbot.pull.links({ rel: branch ? 'branch' : 'root', dest: rootId, keys: true, values: true, live: true })
-      ]),
-      unboxIfNeeded()
-    ), 'key')
-
-    var orderedIds = computed(messageLookup, (lookup) => {
-      var msgs = Object.keys(lookup).map(k => lookup[k])
-      return sort(msgs).map(getKey)
+    }), x => Value(x), {
+      // avoid refresh of entire list when items added
+      comparer: (a, b) => a === b
     })
 
-    var messages = map(orderedIds, (id) => {
-      return messageLookup.get(id)
-    })
+    var messages = concat([prepend, replies])
 
     var result = {
       messages,
       lastId: computed(messages, (messages) => {
         var branches = sort.heads(messages)
-        if(branches.length <= 1) branches = branches[0]
+        if (branches.length <= 1) {
+          branches = branches[0]
+        }
         return branches
       }),
       rootId: computed(messages, (messages) => {
@@ -81,19 +80,16 @@ exports.create = function (api) {
       })
     }
 
-    result.sync = messageLookup.sync
-
+    result.sync = computed([backlinks.sync, sync], (a, b) => a && b, {idle: true})
     return result
   }
 
-  function unboxIfNeeded () {
-    return pull.map(function (msg) {
-      if (msg.sync || (msg.value && typeof msg.value.content === 'object')) {
-        return msg
-      } else {
-        return api.message.sync.unbox(msg)
-      }
-    })
+  function unboxIfNeeded (msg) {
+    if (msg.value && typeof msg.value.content === 'string') {
+      return api.message.sync.unbox(msg) || msg
+    } else {
+      return msg
+    }
   }
 }
 
