@@ -32,7 +32,10 @@ exports.create = function (api) {
     var backlinks = api.backlinks.obs.for(rootId)
     var replies = map(computed(backlinks, (msgs) => {
       return msgs.filter(msg => {
-        return api.message.sync.root(msg) === rootId && msg.value.content.type !== 'vote'
+        return msg.value.content.type !== 'vote' && (
+          api.message.sync.root(msg) === rootId ||
+          matchAny(msg.value.content.branch, rootId)
+        )
       })
     }), x => Value(x), {
       // avoid refresh of entire list when items added
@@ -93,10 +96,6 @@ exports.create = function (api) {
   }
 }
 
-function getKey (msg) {
-  return msg.key
-}
-
 function PreviousKey (collection, item) {
   return computed(collection, (c) => {
     var index = collection.indexOf(item)
@@ -107,4 +106,12 @@ function PreviousKey (collection, item) {
       }
     }
   })
+}
+
+function matchAny (valueOrArray, compare) {
+  if (valueOrArray === compare) {
+    return true
+  } else if (Array.isArray(valueOrArray)) {
+    return valueOrArray.includes(compare)
+  }
 }
