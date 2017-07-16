@@ -26,22 +26,22 @@ exports.create = (api) => {
   })
 
   function publishLike (msg, status = true) {
-    var dig = status ? {
+    var like = status ? {
       type: 'vote',
       channel: msg.value.content.channel,
-      vote: { link: msg.key, value: 1, expression: 'Dig' }
+      vote: { link: msg.key, value: 1, expression: 'Like' }
     } : {
       type: 'vote',
       channel: msg.value.content.channel,
-      vote: { link: msg.key, value: 0, expression: 'Undig' }
+      vote: { link: msg.key, value: 0, expression: 'Unlike' }
     }
     if (msg.value.content.recps) {
-      dig.recps = msg.value.content.recps.map(function (e) {
+      like.recps = msg.value.content.recps.map(function (e) {
         return e && typeof e !== 'string' ? e.link : e
       })
-      dig.private = true
+      like.private = true
     }
-    api.sbot.async.publish(dig)
+    api.sbot.async.publish(like)
   }
 }
 

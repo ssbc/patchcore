@@ -1,10 +1,12 @@
 const nest = require('depnest')
-const getAvatar = require('ssb-avatar')
 const ref = require('ssb-ref')
+const {resolve, onceTrue} = require('mutant')
 
 exports.needs = nest({
   'sbot.async.get': 'first',
   'sbot.pull.links': 'first',
+  'message.sync.unbox': 'first',
+  'about.obs.socialValue': 'first',
   'keys.sync.id': 'first'
 })
 exports.gives = nest('message.async.name')
@@ -16,6 +18,10 @@ exports.create = function (api) {
     if (!ref.isLink(id)) throw new Error('an id must be specified')
     var fallbackName = id.substring(0, 10) + '...'
     api.sbot.async.get(id, function (err, value) {
+      if (value && typeof value.content === 'string') {
+        value = api.message.sync.unbox(value)
+      }
+
       if (err && err.name === 'NotFoundError') {
         return cb(null, fallbackName + '...(missing)')
       } else if (value.content.type === 'post' && typeof value.content.text === 'string') {
@@ -25,7 +31,7 @@ exports.create = function (api) {
       } else if (typeof value.content.text === 'string') {
         return cb(null, value.content.type + ': ' + titleFromMarkdown(value.content.text, 30))
       } else {
-        getAboutName(id, cb)
+        return getAboutName(id, cb)
       }
 
       return cb(null, fallbackName)
@@ -33,11 +39,11 @@ exports.create = function (api) {
   })
 
   function getAboutName (id, cb) {
-    getAvatar({
-      links: api.sbot.pull.links,
-      get: api.sbot.async.get
-    }, api.keys.sync.id(), id, function (_, avatar) {
-      cb(null, avatar && avatar.name || id.substring(0, 10) + '...')
+    var name = api.about.obs.socialValue(id, 'name')
+    var title = api.about.obs.socialValue(id, 'title')
+
+    onceTrue(name.sync, () => {
+      cb(null, resolve(name) || resolve(title) || id.substring(0, 10) + '...')
     })
   }
 }

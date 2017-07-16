@@ -1,12 +1,11 @@
 var pull = require('pull-stream')
 var defer = require('pull-defer')
-var { onceTrue } = require('mutant')
+var { Value, onceTrue, watch, Set: MutantSet } = require('mutant')
 var ref = require('ssb-ref')
 var Reconnect = require('pull-reconnect')
 var createClient = require('ssb-client')
 var createFeed = require('ssb-feed')
 var nest = require('depnest')
-var Value = require('mutant/value')
 var ssbKeys = require('ssb-keys')
 
 exports.needs = nest({
@@ -53,10 +52,8 @@ exports.create = function (api) {
   var sbot = null
   var connection = Value()
   var connectionStatus = Value()
-  var connectedPeers = Value([])
-  var localPeers = Value([])
-
-  setInterval(refreshPeers, 1e3)
+  var connectedPeers = MutantSet()
+  var localPeers = MutantSet()
 
   var rec = Reconnect(function (isConn) {
     function notify (value) {
@@ -77,7 +74,6 @@ exports.create = function (api) {
 
       connection.set(sbot)
       notify()
-      refreshPeers()
     })
   })
 
@@ -89,6 +85,36 @@ exports.create = function (api) {
       sbot.add(msg, cb)
     })
   }
+
+  watch(connection, (sbot) => {
+    if (sbot) {
+      sbot.gossip.peers((err, peers) => {
+        if (err) return console.error(err)
+        connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
+        localPeers.set(peers.filter(x => x.source === 'local').map(x => x.key))
+      })
+      pull(
+        sbot.gossip.changes(),
+        pull.drain(data => {
+          if (data.peer) {
+            if (data.type === 'remove') {
+              connectedPeers.delete(data.peer.key)
+              localPeers.delete(data.peer.key)
+            } else {
+              if (data.peer.source === 'local') {
+                localPeers.add(data.peer.key)
+              }
+              if (data.peer.state === 'connected') {
+                connectedPeers.add(data.peer.key)
+              } else {
+                connectedPeers.delete(data.peer.key)
+              }
+            }
+          }
+        })
+      )
+    }
+  })
 
   var feed = createFeed(internal, keys, {remote: true})
 
@@ -222,16 +248,6 @@ exports.create = function (api) {
     } else if (!cache[msg.key]) {
       // cache[msg.key] = msg.value
       // api.sbot.hook.feed(msg)
-    }
-  }
-
-  function refreshPeers () {
-    if (sbot) {
-      sbot.gossip.peers((err, peers) => {
-        if (err) return console.error(err)
-        connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
-        localPeers.set(peers.filter(x => x.source === 'local').map(x => x.key))
-      })
     }
   }
 }

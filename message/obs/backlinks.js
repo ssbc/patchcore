@@ -1,40 +1,38 @@
 var nest = require('depnest')
-var MutantPullReduce = require('mutant-pull-reduce')
+var computed = require('mutant/computed')
 
 exports.needs = nest({
-  'sbot.pull.backlinks': 'first'
+  'backlinks.obs.for': 'first'
 })
 
 exports.gives = nest('message.obs.backlinks', true)
 
 exports.create = function (api) {
   return nest({
+    // DEPRECATED: should use backlinks.obs.for
     'message.obs.backlinks': (id) => backlinks(id)
   })
 
   function backlinks (id) {
-    return MutantPullReduce(api.sbot.pull.backlinks({
-      query: [
-        {$filter: {
-          dest: id
-        }},
-        {$map: {
-          dest: 'dest',
-          id: 'key',
-          timestamp: 'timestamp',
-          type: ['value', 'content', 'type'],
-          root: ['value', 'content', 'root'],
-          branch: ['value', 'content', 'branch'],
-          author: ['value', 'author']
-        }}
-      ]
-    }), (result, msg) => {
-      if (msg.type !== 'vote' && msg.type !== 'about') {
-        result.push(msg)
-      }
-      return result
+    return computed([api.backlinks.obs.for(id)], (msgs) => {
+      return msgs.map(map).filter((backlink) => {
+        return backlink.type !== 'vote' && backlink.type !== 'about'
+      })
     }, {
-      startValue: []
+      // objects coming down this stream will be immutable
+      comparer: (a, b) => a === b
     })
+  }
+
+  function map (msg) {
+    return {
+      dest: msg.dest,
+      id: msg.key,
+      timestamp: msg.timestamp,
+      type: msg.value.content.type,
+      root: msg.value.content.root,
+      branch: msg.value.content.branch,
+      author: msg.value.author
+    }
   }
 }

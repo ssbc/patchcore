@@ -1,6 +1,6 @@
 {
   "name": "patchcore",
-  "version": "1.5.4",
+  "version": "1.8.1",
   "description": "minimal core for ssb clients",
   "main": "index.js",
   "scripts": {
@@ -37,9 +37,10 @@
     "depnest": "^1.0.2",
     "emoji-named-characters": "^1.0.2",
     "es2040": "^1.2.4",
+    "hashlru": "^2.2.0",
     "html-escape": "^2.0.0",
     "human-time": "0.0.1",
-    "mutant": "^3.21.0",
+    "mutant": "^3.21.2",
     "mutant-pull-reduce": "^1.1.0",
     "pull-abortable": "^4.1.0",
     "pull-cat": "^1.1.11",
@@ -49,7 +50,6 @@
     "simple-mime": "^0.1.0",
     "sorted-array-functions": "^1.0.0",
     "split-buffer": "^1.0.0",
-    "ssb-avatar": "^0.2.0",
     "ssb-client": "^4.4.0",
     "ssb-config": "^2.2.0",
     "ssb-feed": "^2.3.0",
