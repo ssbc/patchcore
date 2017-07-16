@@ -22,6 +22,7 @@ exports.gives = {
     },
     async: {
       get: true,
+      relatedMessages: true,
       publish: true,
       addBlob: true,
       gossipConnect: true
@@ -135,6 +136,18 @@ exports.create = function (api) {
               runHooks({key, value})
               cb(null, value)
             })
+          }
+        }),
+        relatedMessages: rec.async(function(key, cb) {
+          if (typeof cb !== 'function') {
+            throw new Error('cb must be function')
+          }
+          else {
+            sbot.relatedMessages(key, function(err, value) {
+              if (err) return cb(err)
+              runHooks({key, value})
+              cb(null, value)
+            });
           }
         }),
         publish: rec.async((content, cb) => {
