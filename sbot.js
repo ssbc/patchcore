@@ -174,24 +174,7 @@ exports.create = function (api) {
         addBlob: rec.async((stream, cb) => {
           return pull(
             stream,
-            Hash(function (err, id) {
-              if (err) return cb(err)
-              // completely UGLY hack to tell when the blob has been sucessfully written...
-              var start = Date.now()
-              var n = 5
-              next()
-
-              function next () {
-                setTimeout(function () {
-                  sbot.blobs.has(id, function (_, has) {
-                    if (has) return cb(null, id)
-                    if (n--) next()
-                    else cb(new Error('write failed'))
-                  })
-                }, Date.now() - start)
-              }
-            }),
-            sbot.blobs.add()
+            sbot.blobs.add(cb)
           )
         }),
         gossipConnect: rec.async(function (opts, cb) {
@@ -250,19 +233,4 @@ exports.create = function (api) {
       // api.sbot.hook.feed(msg)
     }
   }
-}
-
-function Hash (onHash) {
-  var buffers = []
-  return pull.through(function (data) {
-    buffers.push(typeof data === 'string'
-      ? new Buffer(data, 'utf8')
-      : data
-    )
-  }, function (err) {
-    if (err && !onHash) throw err
-    var b = buffers.length > 1 ? Buffer.concat(buffers) : buffers[0]
-    var h = '&' + ssbKeys.hash(b)
-    onHash && onHash(err, h)
-  })
 }
