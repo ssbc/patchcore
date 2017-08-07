@@ -52,6 +52,7 @@ or when module name is different from file name:
 - keys
 - message
 - sbot
+- [router](./docs/router.md)
 
 ### types
 

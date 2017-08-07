@@ -3,8 +3,8 @@ const nest = require('depnest')
 exports.gives = nest('router.sync.router')
 
 exports.needs = nest({
-  'router.sync.routes': 'reduce',
   'router.sync.normalise': 'first',
+  'router.sync.routes': 'reduce'
 })
 
 exports.create = (api) => {
