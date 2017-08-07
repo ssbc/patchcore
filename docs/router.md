@@ -2,13 +2,32 @@
 
 ## Adding routes
 
-Patchcore collects _routes_ from `router.sync.routes`. It expects arrays of the form:
+Patchcore collects _routes_ from `router.sync.routes` as a reduce. It expects the final routes collection to be an array of arrays of the form:
 
 ```
   [ routeValidator, routeFunction ]
 ```
 
 Where `routeValidator` is a function that returns true / false when given a `location` object.
+
+Here's a simple example of extending the routes
+
+```js
+exports.create = (api) => {
+  return { router: { sync: { routes } } }
+
+  function routes (sofar = []) {
+    const moreRoutes = [
+      [ (location) => location.page === 'home',  api.app.page.home ],
+      [ (location) => location.type === 'group', api.app.page.group ],
+      [ ()         => true,                      api.app.page.notFound ]
+    ]
+
+    return [...moreRoutes, ...sofar]
+    // Note order matters here
+  }
+}
+```
 
 
 ## Using the router
