@@ -11,7 +11,7 @@ function normalise (location) {
   if (isBlob(location)) return { blob: location }
   if (isChannel(location)) return { channel: location }
   if (isFeed(location)) return { feed: location }
-  if (isMsg(location)) return { msg: location }
+  if (isMsg(location)) return { key: location }
   if (isPage(location)) return { page: location }
 }
 
