@@ -11,10 +11,13 @@ exports.needs = nest({
   'keys.sync.id': 'first'
 })
 
-exports.gives = nest('invite.async.accept')
+exports.gives = nest({
+  'invite.async.accept': true,
+  'invite.async.autofollow': true,
+})
 
 exports.create = function (api) {
-  return nest('invite.async.accept', function (invite, cb) {
+  function accept (invite, cb) {
     var progress = Value('Connecting...')
     var data = ref.parseInvite(invite)
     var id = api.keys.sync.id()
@@ -70,5 +73,18 @@ exports.create = function (api) {
     })
 
     return progress
+  }
+  return nest({
+    'invite.async.accept': accept,
+    //like invite, but check whether we already follow them first
+    'invite.async.autofollow': function (invite, cb) {
+      var id = api.keys.sync.id()
+      var data = ref.parseInvite(invite)
+      api.contact.async.followerOf(id, data.key, function (_, follows) {
+        if (follows) console.log('already following', cb())
+        else accept(invite, cb)
+      })
+    }
   })
 }
+
