@@ -24,7 +24,8 @@ exports.gives = {
       get: true,
       publish: true,
       addBlob: true,
-      gossipConnect: true
+      gossipConnect: true,
+      friendsGet: true
     },
     pull: {
       log: true,
@@ -60,7 +61,17 @@ exports.create = function (api) {
       isConn(value); connectionStatus.set(value)
     }
 
-    createClient(keys, config, function (err, _sbot) {
+    var opts = {
+      path: config.path,
+      remote: config.remote,
+      host: config.host,
+      port: config.port,
+      key: config.key,
+      appKey: config.caps.shs,
+      timers: config.timers
+    }
+
+    createClient(keys, opts, function (err, _sbot) {
       if (err) {
         return notify(err)
       }
@@ -179,6 +190,9 @@ exports.create = function (api) {
         }),
         gossipConnect: rec.async(function (opts, cb) {
           sbot.gossip.connect(opts, cb)
+        }),
+        friendsGet: rec.async(function (opts, cb) {
+          sbot.friends.get(opts, cb)
         })
       },
       pull: {
