@@ -8,7 +8,8 @@ exports.needs = nest({
   'sbot.async.publish': 'first',
   'sbot.async.gossipConnect': 'first',
   'contact.async.followerOf': 'first',
-  'keys.sync.id': 'first'
+  'keys.sync.id': 'first',
+  'config.sync.load': 'first'
 })
 
 exports.gives = nest({
@@ -21,6 +22,9 @@ exports.create = function (api) {
     var progress = Value('Connecting...')
     var data = ref.parseInvite(invite)
     var id = api.keys.sync.id()
+
+    var config = api.config.sync.load()
+
     if (!data) return cb(new Error('Not a valid invite code. Please make sure you copied the entire code and try again.'))
 
     api.sbot.async.gossipConnect(data.remote, function (err) {
@@ -30,7 +34,8 @@ exports.create = function (api) {
     // connect to the remote pub using the invite code
     ssbClient(null, {
       remote: data.invite,
-      manifest: { invite: {use: 'async'}, getAddress: 'async' }
+      manifest: { invite: {use: 'async'}, getAddress: 'async' },
+      appKey: config.caps.shs
     }, function (err, sbot) {
       if (err) return cb(err)
       progress.set('Requesting follow...')
@@ -82,7 +87,7 @@ exports.create = function (api) {
       var data = ref.parseInvite(invite)
       api.contact.async.followerOf(id, data.key, function (_, follows) {
         if (follows) console.log('already following', cb())
-        else accept(invite, cb)
+        else console.log('accept invite:'+invite, accept(invite, cb))
       })
     }
   })
