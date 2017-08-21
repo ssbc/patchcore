@@ -5,7 +5,8 @@ var ref = require('ssb-ref')
 
 exports.needs = nest({
   'contact.obs.following': 'first',
-  'sbot.async.publish': 'first'
+  'sbot.async.publish': 'first',
+  'sbot.async.friendsGet': 'first'
 })
 
 exports.gives = nest({
@@ -18,11 +19,7 @@ exports.create = function (api) {
   })
 
   function followerOf (source, dest, cb) {
-    var following = api.contact.obs.following(source)
-    onceTrue(following.sync, () => {
-      var value = resolve(following)
-      cb(null, value && value.has(dest))
-    })
+    api.sbot.async.friendsGet({source: source, dest: dest}, cb)
   }
 
   function follow (id, cb) {
@@ -43,3 +40,7 @@ exports.create = function (api) {
     }, cb)
   }
 }
+
+
+
+
