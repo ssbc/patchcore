@@ -22,7 +22,6 @@ exports.create = function (api) {
     var progress = Value('Connecting...')
     var data = ref.parseInvite(invite)
     var id = api.keys.sync.id()
-
     var config = api.config.sync.load()
 
     if (!data) return cb(new Error('Not a valid invite code. Please make sure you copied the entire code and try again.'))
@@ -35,7 +34,7 @@ exports.create = function (api) {
     ssbClient(null, {
       remote: data.invite,
       manifest: { invite: {use: 'async'}, getAddress: 'async' },
-      appKey: config.caps.shs
+      appKey: config.caps && config.caps.shs
     }, function (err, sbot) {
       if (err) return cb(err)
       progress.set('Requesting follow...')
