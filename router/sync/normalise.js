@@ -12,7 +12,7 @@ function normalise (location) {
   if (isChannel(location)) return { channel: location }
   if (isFeed(location)) return { feed: location }
   if (isMsg(location)) return { key: location }
-  if (isPage(location)) return { page: location }
+  if (isPage(location)) return { page: location.substring(1) }
 }
 
 function isChannel (str) {
