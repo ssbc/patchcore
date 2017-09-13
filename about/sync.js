@@ -1,9 +1,9 @@
-var nest = require('depnest');
+var nest = require('depnest')
 
-exports.gives = nest('about.sync.shortFeedId');
+exports.gives = nest('about.sync.shortFeedId')
 
 exports.create = function (api) {
   return nest('about.sync.shortFeedId', function (id) {
-    return id.slice(1, 10);
-  });
-};
+    return id.slice(1, 10)
+  })
+}
