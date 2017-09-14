@@ -10,12 +10,12 @@ exports.needs = nest({
 })
 
 exports.gives = nest({
-  'contact.async': ['follow', 'unfollow', 'followerOf']
+  'contact.async': ['follow', 'unfollow', 'followerOf', 'block', 'unblock']
 })
 
 exports.create = function (api) {
   return nest({
-    'contact.async': {follow, unfollow, followerOf}
+    'contact.async': {follow, unfollow, followerOf, block, unblock}
   })
 
   function followerOf (source, dest, cb) {
@@ -39,8 +39,24 @@ exports.create = function (api) {
       following: false
     }, cb)
   }
+
+  function block (id, cb) {
+    if (!ref.isFeed(id)) throw new Error('a feed id must be specified')
+    api.sbot.async.publish({
+      type: 'contact',
+      contact: id,
+      blocking: true
+    }, cb)
+  }
+
+  function unblock (id, cb) {
+    if (!ref.isFeed(id)) throw new Error('a feed id must be specified')
+    api.sbot.async.publish({
+      type: 'contact',
+      contact: id,
+      blocking: false
+    }, cb)
+  }
+
 }
-
-
-
 

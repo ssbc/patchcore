@@ -8,7 +8,7 @@ exports.needs = nest({
 })
 
 exports.gives = nest({
-  'contact.obs': ['following', 'followers'],
+  'contact.obs': ['following', 'followers', 'blocking', 'blockers'],
   'sbot.hook.publish': true
 })
 
@@ -20,7 +20,9 @@ exports.create = function (api) {
   return nest({
     'contact.obs': {
       following: (id) => values(get(id), 'following', true),
-      followers: (id) => values(get(id), 'followers', true)
+      followers: (id) => values(get(id), 'followers', true),
+      blocking: (id) => values(get(id), 'blocking', true),
+      blockers: (id) => values(get(id), 'blockers', true),
     },
     'sbot.hook.publish': function (msg) {
       if (isContact(msg)) {
@@ -35,6 +37,18 @@ exports.create = function (api) {
           })
           update(dest, {
             followers: {
+              [source]: [msg.value.content]
+            }
+          })
+        }
+        if (typeof msg.value.content.blocking === 'boolean') {
+          update(source, {
+            blocking: {
+              [dest]: [msg.value.content]
+            }
+          })
+          update(dest, {
+            blockers: {
               [source]: [msg.value.content]
             }
           })
@@ -65,6 +79,7 @@ exports.create = function (api) {
   }
 
   function update (id, values) {
+    // values = { following, followers, blocking, blockedBy, ... }
     var state = get(id)
     var lastState = state()
     var changed = false
