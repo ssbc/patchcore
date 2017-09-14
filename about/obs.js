@@ -8,6 +8,7 @@ var fallbackImageUrl = 'data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAA
 exports.needs = nest({
   'sbot.pull.stream': 'first',
   'blob.sync.url': 'first',
+  'about.sync.shortFeedId': 'first',
   'keys.sync.id': 'first'
 })
 
@@ -35,7 +36,7 @@ exports.create = function (api) {
   return nest({
     'about.obs': {
       // quick helpers, probably should deprecate!
-      name: (id) => socialValue(id, 'name', id.slice(1, 10)),
+      name: (id) => socialValue(id, 'name', api.about.sync.shortFeedId(id)),
       description: (id) => socialValue(id, 'description'),
       image: (id) => socialValue(id, 'image'),
       names: (id) => groupedValues(id, 'name'),

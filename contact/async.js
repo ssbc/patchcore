@@ -57,6 +57,5 @@ exports.create = function (api) {
       blocking: false
     }, cb)
   }
-
 }
 
