@@ -21,8 +21,8 @@ exports.create = function (api) {
     'contact.obs': {
       following: following,
       followers: followers, 
-      blocking: (id) => values(get(id), 'blocking', true),
-      blockers: (id) => values(get(id), 'blockers', true),
+      // blocking: (id) => values(get(id), 'blocking', true),
+      // blockers: (id) => values(get(id), 'blockers', true),
     },
     'sbot.hook.publish': function (msg) {
       // TODO ???
@@ -80,20 +80,7 @@ exports.create = function (api) {
           else return sofar
         }, [])
     })
-    // var obs = computed(cache.keys, keys => {
-    //   return keys
-    //     .reduce((sofar, next) => {
-    //       if (get(next)()[key]) return [...sofar, next]
-    //       else return sofar
-    //     }, [])
-    // })
 
-    obs.sync = sync
-    return obs
-  }
-
-  function values (state, key, compare) {
-    var obs = computed([state, key, compare], getIds)
     obs.sync = sync
     return obs
   }
@@ -114,7 +101,6 @@ exports.create = function (api) {
   }
 
   function update (sourceId, values) {
-    // ssb-contacts: values = { following, followers, blocking, blockers, ... }
     // ssb-friends: values = {
     //   keyA: true|null|false (friend, neutral, block)
     //   keyB: true|null|false (friend, neutral, block)
@@ -128,17 +114,7 @@ exports.create = function (api) {
         changed = true
       }
     }
-    // for (var key in values) {
 
-    //   var valuesForKey = lastState[key] = lastState[key] || {}
-    //   for (var dest in values[key]) {
-    //     var value = values[key][dest]
-    //     if (!valuesForKey[dest] || value[1] > valuesForKey[dest][1] || !values[1] || !valuesForKey[dest[1]]) {
-    //       valuesForKey[dest] = value
-    //       changed = true
-    //     }
-    //   }
-    // }
     if (changed) {
       state.set(lastState)
     }
@@ -157,18 +133,7 @@ exports.create = function (api) {
   }
 }
 
-function getIds (state, key, compare) {
-  var result = new Set()
-  if (state[key]) {
-    for (var dest in state[key]) {
-      if (state[key][dest][0] === compare) {
-        result.add(dest)
-      }
-    }
-  }
-  return result
-}
-
 function isContact (msg) {
   return msg.value && msg.value.content && msg.value.content.type === 'contact'
 }
+
