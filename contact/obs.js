@@ -8,7 +8,7 @@ exports.needs = nest({
 })
 
 exports.gives = nest({
-  'contact.obs': ['following', 'followers', 'blocking', 'blockers'],
+  'contact.obs': ['following', 'followers'], //, 'blocking', 'blockers'],
   'sbot.hook.publish': true
 })
 
