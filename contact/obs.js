@@ -8,7 +8,7 @@ exports.needs = nest({
 })
 
 exports.gives = nest({
-  'contact.obs': ['following', 'followers'], //, 'blocking', 'blockers'],
+  'contact.obs': ['following', 'followers', 'blocking', 'blockers'],
   'sbot.hook.publish': true
 })
 
@@ -21,49 +21,35 @@ exports.create = function (api) {
     'contact.obs': {
       following: following,
       followers: followers, 
-      // blocking: (id) => values(get(id), 'blocking', true),
-      // blockers: (id) => values(get(id), 'blockers', true),
+      blocking: blocking,
+      blockers: blockers
     },
     'sbot.hook.publish': function (msg) {
-      // TODO ???
-      // if (isContact(msg)) {
-      //   // HACK: make interface more responsive when sbot is busy
-      //   var source = msg.value.author
-      //   var dest = msg.value.content.contact
+      if (!isContact(msg)) return
 
-      //   if (typeof msg.value.content.following === 'boolean') {
-      //     update(source, {
-      //       following: {
-      //         [dest]: [msg.value.content]
-      //       }
-      //     })
-      //     update(dest, {
-      //       followers: {
-      //         [source]: [msg.value.content]
-      //       }
-      //     })
-      //   }
-      //   if (typeof msg.value.content.blocking === 'boolean') {
-      //     update(source, {
-      //       blocking: {
-      //         [dest]: [msg.value.content]
-      //       }
-      //     })
-      //     update(dest, {
-      //       blockers: {
-      //         [source]: [msg.value.content]
-      //       }
-      //     })
-      //   }
-      // }
+      // HACK: make interface more responsive when sbot is busy
+      var source = msg.value.author
+      var dest = msg.value.content.contact
+      var tristate = ( // from ssb-friends
+        msg.value.content.following ? true
+      : msg.value.content.flagged || msg.value.content.blocking ? false
+      : null
+      )
+
+      update(source, { [dest]: tristate })
     }
   })
+
+  // states:
+  //   true = following,
+  //   null = neutral (may have unfollowed),
+  //   false = blocking
 
   function following (key) {
     var obs = computed(get(key), state => {
       return Object.keys(state)
         .reduce((sofar, next) => {
-          if (state[next]) return [...sofar, next]
+          if (state[next] === true) return [...sofar, next]
           else return sofar
         }, [])
     })
@@ -76,7 +62,7 @@ exports.create = function (api) {
     var obs = computed(cache, cache => {
       return Object.keys(cache)
         .reduce((sofar, next) => {
-          if (cache[next][key]) return [...sofar, next]
+          if (cache[next][key] === true) return [...sofar, next]
           else return sofar
         }, [])
     })
@@ -84,6 +70,33 @@ exports.create = function (api) {
     obs.sync = sync
     return obs
   }
+
+  function blocking (key) {
+    var obs = computed(get(key), state => {
+      return Object.keys(state)
+        .reduce((sofar, next) => {
+          if (state[next] === false) return [...sofar, next]
+          else return sofar
+        }, [])
+    })
+
+    obs.sync = sync
+    return obs
+  }
+
+  function blockers (key) {
+    var obs = computed(cache, cache => {
+      return Object.keys(cache)
+        .reduce((sofar, next) => {
+          if (cache[next][key] === false) return [...sofar, next]
+          else return sofar
+        }, [])
+    })
+
+    obs.sync = sync
+    return obs
+  }
+
 
   function loadCache () {
     pull(
