@@ -10,7 +10,6 @@ or _the shared assumptions of all (or most) ssb related applications_
 - [ssb-private](https://github.com/ssbc/ssb-private)
 - [ssb-backlinks](https://github.com/ssbc/ssb-backlinks)
 - [ssb-about](https://github.com/ssbc/ssb-about)
-- [ssb-contacts](https://github.com/ssbc/ssb-contacts)
 
 ## apps
 
@@ -45,14 +44,14 @@ or when module name is different from file name:
 - about
 - blob
 - config
-- contact
+- [contact](./docs/contact.md)
 - emoji
 - feed
 - invite
 - keys
 - message
-- sbot
 - [router](./docs/router.md)
+- sbot
 
 ### types
 
