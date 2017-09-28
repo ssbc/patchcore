@@ -3,6 +3,8 @@ var nest = require('depnest')
 var extend = require('xtend')
 
 exports.needs = nest({
+  'contact.obs.blockers': 'first',
+  'keys.sync.id': 'first',
   'message.html': {
     decorate: 'reduce',
     layout: 'first',
@@ -14,8 +16,14 @@ exports.needs = nest({
 exports.gives = nest('message.html.render')
 
 exports.create = function (api) {
+  const myId = api.keys.sync.id()
+
   return nest('message.html.render', function renderMessage (msg, opts) {
     if (msg.value.content.type !== 'post') return
+
+    const blockers = api.contact.obs.blockers(msg.value.author)
+    if (blockers().includes(myId)) return
+
     var element = api.message.html.layout(msg, extend({
       title: messageTitle(msg),
       content: messageContent(msg),
