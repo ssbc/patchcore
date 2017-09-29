@@ -1,9 +1,12 @@
 const nest = require('depnest')
 const extend = require('xtend')
+var pull = require('pull-stream')
 
 exports.gives = nest('feed.pull.channel')
 exports.needs = nest({
-  'sbot.pull.backlinks': 'first'
+  'sbot.pull.backlinks': 'first',
+  'contact.obs.blocking': 'first',
+  'keys.sync.id': 'first'
 })
 
 exports.create = function (api) {
@@ -25,11 +28,16 @@ exports.create = function (api) {
         }
       }
 
-      return api.sbot.pull.backlinks(extend(opts, {
-        query: [
-          {$filter: filter}
-        ]
-      }))
+      const blocking = api.contact.obs.blocking(api.keys.sync.id())
+
+      return pull(
+        api.sbot.pull.backlinks(extend(opts, {
+          query: [
+            {$filter: filter}
+          ]
+        })),
+        pull.filter(msg => !blocking().includes(msg.value.author))
+      )
     }
   })
 }

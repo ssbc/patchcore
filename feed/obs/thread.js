@@ -7,7 +7,9 @@ exports.needs = nest({
   'backlinks.obs.for': 'first',
   'sbot.async.get': 'first',
   'message.sync.unbox': 'first',
-  'message.sync.root': 'first'
+  'message.sync.root': 'first',
+  'contact.obs.blocking': 'first',
+  'keys.sync.id': 'first'
 })
 
 exports.gives = nest('feed.obs.thread')
@@ -19,20 +21,23 @@ exports.create = function (api) {
     if (!ref.isLink(rootId)) throw new Error('an id must be specified')
     var sync = Value(false)
 
+    const blocking = api.contact.obs.blocking(api.keys.sync.id())
+
     var prepend = MutantArray()
     api.sbot.async.get(rootId, (err, value) => {
       sync.set(true)
       if (!err) {
-        prepend.push(
-          Value(unboxIfNeeded({key: rootId, value}))
-        )
+        var msg = unboxIfNeeded({key: rootId, value})
+        if (blocking().includes(msg.value.author)) return
+        prepend.push(Value(msg))
       }
     })
 
     var backlinks = api.backlinks.obs.for(rootId)
     var replies = map(computed(backlinks, (msgs) => {
       return msgs.filter(msg => {
-        return msg.value.content.type !== 'vote' && (
+        return !blocking().includes(msg.value.author) &&
+          msg.value.content.type !== 'vote' && (
           api.message.sync.root(msg) === rootId ||
           matchAny(msg.value.content.branch, rootId)
         )
