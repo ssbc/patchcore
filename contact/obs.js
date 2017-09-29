@@ -30,7 +30,7 @@ exports.create = function (api) {
       following: (key) => matchingValueKeys(get(key, cache), true),
       followers: (key) => matchingValueKeys(get(key, reverseCache), true),
       blocking: (key) => matchingValueKeys(get(key, cache), false),
-      blockers: (key) => matchingValueKeys(get(key, reverseCache), true)
+      blockers: (key) => matchingValueKeys(get(key, reverseCache), false)
     },
     'sbot.hook.publish': function (msg) {
       if (!isContact(msg)) return
