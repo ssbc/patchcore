@@ -85,7 +85,7 @@ exports.create = function (api) {
           }
 
           sync.set(true)
-        } else {
+        } else if (item && ref.isFeed(item.from) && ref.isFeed(item.to)) {
           // handle realtime updates
           update(item.from, {[item.to]: item.value}, cache)
           update(item.to, {[item.from]: item.value}, reverseCache)
