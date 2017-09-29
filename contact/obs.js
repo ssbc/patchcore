@@ -102,12 +102,15 @@ exports.create = function (api) {
     pull(
       api.sbot.pull.stream(sbot => sbot.friends.stream({live: true})),
       pull.drain(item => {
-        for (var source in item) {
-          if (ref.isFeed(source)) update(source, item[source])
-        }
-
         if (!sync()) {
+          // initial dump
+          for (var source in item) {
+            if (ref.isFeed(source)) update(source, item[source])
+          }
           sync.set(true)
+        } else {
+          // handle realtime updates
+          update(item.from, {[item.to]: item.value})
         }
       })
     )
