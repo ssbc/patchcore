@@ -1,5 +1,5 @@
 var nest = require('depnest')
-var { Value, Dict, computed } = require('mutant')
+var { Value, computed } = require('mutant')
 var pull = require('pull-stream')
 var ref = require('ssb-ref')
 
@@ -14,15 +14,23 @@ exports.gives = nest({
 
 exports.create = function (api) {
   var cacheLoading = false
-  var cache = Dict()
+  var cache = {}
+  var reverseCache = {}
+
   var sync = Value(false)
 
   return nest({
     'contact.obs': {
-      following: following,
-      followers: followers, 
-      blocking: blocking,
-      blockers: blockers
+
+      // states:
+      //   true = following,
+      //   null = neutral (may have unfollowed),
+      //   false = blocking
+
+      following: (key) => matchingValueKeys(get(key, cache), true),
+      followers: (key) => matchingValueKeys(get(key, reverseCache), true),
+      blocking: (key) => matchingValueKeys(get(key, cache), false),
+      blockers: (key) => matchingValueKeys(get(key, reverseCache), true)
     },
     'sbot.hook.publish': function (msg) {
       if (!isContact(msg)) return
@@ -36,96 +44,67 @@ exports.create = function (api) {
       : null
       )
 
-      update(source, { [dest]: tristate })
+      update(source, { [dest]: tristate }, cache)
+      update(dest, { [source]: tristate }, reverseCache)
     }
   })
 
-  // states:
-  //   true = following,
-  //   null = neutral (may have unfollowed),
-  //   false = blocking
-
-  function following (key) {
-    var obs = computed(get(key), state => {
-      return Object.keys(state)
-        .reduce((sofar, next) => {
-          if (state[next] === true) return [...sofar, next]
-          else return sofar
-        }, [])
+  function matchingValueKeys (state, value) {
+    var obs = computed(state, state => {
+      return Object.keys(state).filter(key => {
+        return state[key] === value
+      })
     })
 
     obs.sync = sync
     return obs
   }
-
-  function followers (key) {
-    var obs = computed(cache, cache => {
-      return Object.keys(cache)
-        .reduce((sofar, next) => {
-          if (cache[next][key] === true) return [...sofar, next]
-          else return sofar
-        }, [])
-    })
-
-    obs.sync = sync
-    return obs
-  }
-
-  function blocking (key) {
-    var obs = computed(get(key), state => {
-      return Object.keys(state)
-        .reduce((sofar, next) => {
-          if (state[next] === false) return [...sofar, next]
-          else return sofar
-        }, [])
-    })
-
-    obs.sync = sync
-    return obs
-  }
-
-  function blockers (key) {
-    var obs = computed(cache, cache => {
-      return Object.keys(cache)
-        .reduce((sofar, next) => {
-          if (cache[next][key] === false) return [...sofar, next]
-          else return sofar
-        }, [])
-    })
-
-    obs.sync = sync
-    return obs
-  }
-
 
   function loadCache () {
     pull(
       api.sbot.pull.stream(sbot => sbot.friends.stream({live: true})),
       pull.drain(item => {
         if (!sync()) {
-          // initial dump
+          // populate observable cache
+          var reverse = {}
           for (var source in item) {
-            if (ref.isFeed(source)) update(source, item[source])
+            if (ref.isFeed(source)) {
+              update(source, item[source], cache)
+
+              // generate reverse lookup
+              for (var dest in item[source]) {
+                reverse[dest] = reverse[dest] || {}
+                reverse[dest][source] = item[source][dest]
+              }
+            }
           }
+
+          // populate reverse observable cache
+          for (var dest in reverse) {
+            update(dest, reverse[dest], reverseCache)
+          }
+
           sync.set(true)
         } else {
           // handle realtime updates
-          update(item.from, {[item.to]: item.value})
+          update(item.from, {[item.to]: item.value}, cache)
+          update(item.to, {[item.from]: item.value}, reverseCache)
         }
       })
     )
   }
 
-  function update (sourceId, values) {
+  function update (sourceId, values, lookup) {
     // ssb-friends: values = {
     //   keyA: true|null|false (friend, neutral, block)
     //   keyB: true|null|false (friend, neutral, block)
     // }
-    var state = get(sourceId)
+    var state = get(sourceId, lookup)
     var lastState = state()
     var changed = false
+
     for (var targetId in values) {
-      if (values[targetId] != lastState[targetId]) {
+      if (values[targetId] !== lastState[targetId]) {
         lastState[targetId] = values[targetId]
         changed = true
       }
@@ -136,20 +115,19 @@ exports.create = function (api) {
     }
   }
 
-  function get (id) {
+  function get (id, lookup) {
     if (!ref.isFeed(id)) throw new Error('Contact state requires an id!')
     if (!cacheLoading) {
       cacheLoading = true
       loadCache()
     }
-    if (!cache.has(id)) {
-      cache.put(id, Value({}))
+    if (!lookup[id]) {
+      lookup[id] = Value({})
     }
-    return cache.get(id)
+    return lookup[id]
   }
 }
 
 function isContact (msg) {
   return msg.value && msg.value.content && msg.value.content.type === 'contact'
 }
-
