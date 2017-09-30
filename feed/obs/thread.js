@@ -28,7 +28,7 @@ exports.create = function (api) {
       sync.set(true)
       if (!err) {
         var msg = unboxIfNeeded({key: rootId, value})
-        if (blocking().includes(msg.value.author)) return
+        if (blocking().includes(msg.value.author)) msg.isBlocked = true
         prepend.push(Value(msg))
       }
     })

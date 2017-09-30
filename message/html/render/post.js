@@ -18,7 +18,7 @@ exports.create = function (api) {
     if (msg.value.content.type !== 'post') return
     var element = api.message.html.layout(msg, extend({
       title: messageTitle(msg),
-      content: messageContent(msg),
+      content: msg.isBlocked ? 'Content of a blocked user' : messageContent(msg),
       layout: 'default'
     }, opts))
 
