@@ -5,8 +5,7 @@ const pull = require('pull-stream')
 exports.gives = nest('feed.pull.type')
 exports.needs = nest({
   'sbot.pull.messagesByType': 'first',
-  'contact.obs.blocking': 'first',
-  'keys.sync.id': 'first'
+  'message.sync.isBlocked': 'first',
 })
 
 exports.create = function (api) {
@@ -20,11 +19,9 @@ exports.create = function (api) {
         lt: opts.lt && typeof opts.lt === 'object' ? opts.lt.timestamp : opts.lt
       })
 
-      const blocking = api.contact.obs.blocking(api.keys.sync.id())
-
       return pull(
         api.sbot.pull.messagesByType(opts),
-        pull.filter(msg => !blocking().includes(msg.value.author))
+        pull.filter(msg => !api.message.sync.isBlocked(msg))
       )
     }
   })

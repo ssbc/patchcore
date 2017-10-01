@@ -5,8 +5,7 @@ const ref = require('ssb-ref')
 
 exports.needs = nest({
   'sbot.pull.backlinks': 'first',
-  'contact.obs.blocking': 'first',
-  'keys.sync.id': 'first'
+  'message.sync.isBlocked': 'first'
 })
 
 exports.gives = nest('feed.pull.mentions')
@@ -31,11 +30,9 @@ exports.create = function (api) {
         ]
       })
 
-      const blocking = api.contact.obs.blocking(api.keys.sync.id())
-
       return pull(
         api.sbot.pull.backlinks(opts),
-        pull.filter((msg) => !blocking().includes(msg.value.author))
+        pull.filter(msg => !api.message.sync.isBlocked(msg))
       )
     }
   })
