@@ -6,9 +6,7 @@ exports.needs = nest({
   'about.obs.name': 'first',
   'message.html': {
     decorate: 'reduce',
-    layout: 'first',
-    link: 'first',
-    markdown: 'first'
+    layout: 'first'
   }
 })
 
