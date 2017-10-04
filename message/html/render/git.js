@@ -1,12 +1,14 @@
-var h = require('mutant/h')
+const { h, Value } = require('mutant')
 var nest = require('depnest')
 var extend = require('xtend')
 
 exports.needs = nest({
   'about.obs.name': 'first',
+  'sbot.async.get': 'first',
   'message.html': {
     decorate: 'reduce',
-    layout: 'first'
+    layout: 'first',
+    markdown: 'first'
   }
 })
 
@@ -48,27 +50,38 @@ exports.create = function (api) {
   }
 
   function getRepoName(repo) {
-    if (repo && repo[0] == '%')
-      return api.about.obs.name(repo)
+    if (repo && repo[0] == '%') {
+      const assignedName = api.about.obs.name(repo)
+      if (assignedName() == repo.slice(1, 10))
+      {
+        const name = Value(assignedName())
+        api.sbot.async.get(repo, (err, msg) => {
+          name.set(msg.content.name)
+        })
+        return name
+      }
+      else
+        return assignedName
+    }
     else if (repo && repo[0] == '#')
       return repo
   }
   
   function pullRequestTitle(msg) {
-    return ['Created a pull request in git repo ', getRepoName(msg.value.content.repo)]
+    return ['Created a pull request in git repo ', h('a', { 'href': 'http://localhost:7718/' + msg.key }, getRepoName(msg.value.content.repo))]
   }
 
   function renderPullRequestContent (msg) {
     const { content } = msg.value
-    return ['Merge branch ', content.head_branch, " into ", content.branch, h("div", content.text)]
+    return ['Merge branch ', content.head_branch, " into ", content.branch, h("div", api.message.html.markdown(content.text))]
   }
 
   function renderCreateContent(msg) {
-    return ['Created git repo ', msg.value.content.name]
+    return ['Created git repo ', h('a', { 'href': 'http://localhost:7718/' + msg.key }, msg.value.content.name)]
   }
 
   function updateTitle(msg) {
-    return ['Updated git repo ', getRepoName(msg.value.content.repo)]
+    return ['Updated git repo ', h('a', { 'href': 'http://localhost:7718/' + msg.key }, getRepoName(msg.value.content.repo))]
   }
   
   function renderUpdateContent (msg) {
