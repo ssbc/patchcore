@@ -8,8 +8,7 @@ exports.needs = nest({
   'sbot.async.get': 'first',
   'message.sync.unbox': 'first',
   'message.sync.root': 'first',
-  'contact.obs.blocking': 'first',
-  'keys.sync.id': 'first'
+  'message.sync.isBlocked': 'first',
 })
 
 exports.gives = nest('feed.obs.thread')
@@ -20,15 +19,14 @@ exports.create = function (api) {
   function thread (rootId, { branch } = {}) {
     if (!ref.isLink(rootId)) throw new Error('an id must be specified')
     var sync = Value(false)
-
-    const blocking = api.contact.obs.blocking(api.keys.sync.id())
+    const { isBlocked, unbox, root } = message.sync
 
     var prepend = MutantArray()
     api.sbot.async.get(rootId, (err, value) => {
       sync.set(true)
       if (!err) {
         var msg = unboxIfNeeded({key: rootId, value})
-        if (blocking().includes(msg.value.author)) msg.isBlocked = true
+        if (isBlocked(msg)) msg.isBlocked = true
         prepend.push(Value(msg))
       }
     })
@@ -36,11 +34,10 @@ exports.create = function (api) {
     var backlinks = api.backlinks.obs.for(rootId)
     var replies = map(computed(backlinks, (msgs) => {
       return msgs.filter(msg => {
-        return !blocking().includes(msg.value.author) &&
-          msg.value.content.type !== 'vote' && (
-          api.message.sync.root(msg) === rootId ||
-          matchAny(msg.value.content.branch, rootId)
-        )
+        const { type, branch } = msg.value.content
+        return type !== 'vote'
+          && !isBlocked(msg)
+          && (root(msg) === rootId || matchAny(branch, rootId))
       })
     }), x => Value(x), {
       // avoid refresh of entire list when items added
@@ -94,7 +91,7 @@ exports.create = function (api) {
 
   function unboxIfNeeded (msg) {
     if (msg.value && typeof msg.value.content === 'string') {
-      return api.message.sync.unbox(msg) || msg
+      return unbox(msg) || msg
     } else {
       return msg
     }

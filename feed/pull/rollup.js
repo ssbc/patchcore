@@ -12,10 +12,9 @@ var onceTrue = require('mutant/once-true')
 exports.needs = nest({
   'backlinks.obs.for': 'first',
   'sbot.async.get': 'first',
+  'message.sync.isBlocked': 'first',
   'message.sync.root': 'first',
   'message.sync.unbox': 'first',
-  'contact.obs.blocking': 'first',
-  'keys.sync.id': 'first'
 })
 
 exports.gives = nest('feed.pull.rollup', true)
@@ -24,8 +23,6 @@ exports.create = function (api) {
   // cache mostly just to avoid reading the same roots over and over again
   // not really big enough for multiple refresh cycles
   var cache = HLRU(100)
-
-  const blocking = api.contact.obs.blocking(api.keys.sync.id())
 
   return nest('feed.pull.rollup', function (rootFilter) {
     var seen = new Set()
@@ -88,17 +85,16 @@ exports.create = function (api) {
       // FILTER
       pull.filter(msg => msg && msg.value && !api.message.sync.root(msg)),
       pull.filter(rootFilter || (() => true)),
-
-      pull.filter(msg => !blocking().includes(msg.value.author)),
+      pull.filter(msg => !api.message.sync.isBlocked(msg))
 
       // ADD REPLIES
       pull.asyncMap((rootMessage, cb) => {
         // use global backlinks cache
         var backlinks = api.backlinks.obs.for(rootMessage.key)
         onceTrue(backlinks.sync, () => {
-          var replies = resolve(backlinks).filter((msg) => {
-            return !blocking().includes(msg.value.author) &&
-              api.message.sync.root(msg) === rootMessage.key
+          var replies = resolve(backlinks).filter(msg => {
+            return api.message.sync.root(msg) === rootMessage.key
+              && !api.message.sync.isBlocked(msg)
           })
           cb(null, extend(rootMessage, { replies }))
         })

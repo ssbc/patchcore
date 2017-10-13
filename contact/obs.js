@@ -4,7 +4,7 @@ var pull = require('pull-stream')
 var ref = require('ssb-ref')
 
 exports.needs = nest({
-  'sbot.pull.stream': 'first'
+  'sbot.pull.stream': 'first',
 })
 
 exports.gives = nest({
