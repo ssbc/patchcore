@@ -7,7 +7,8 @@ exports.needs = nest({
   'backlinks.obs.for': 'first',
   'sbot.async.get': 'first',
   'message.sync.unbox': 'first',
-  'message.sync.root': 'first'
+  'message.sync.root': 'first',
+  'message.sync.isBlocked': 'first'
 })
 
 exports.gives = nest('feed.obs.thread')
@@ -18,24 +19,23 @@ exports.create = function (api) {
   function thread (rootId, { branch } = {}) {
     if (!ref.isLink(rootId)) throw new Error('an id must be specified')
     var sync = Value(false)
+    var { isBlocked, root } = api.message.sync
 
     var prepend = MutantArray()
     api.sbot.async.get(rootId, (err, value) => {
       sync.set(true)
       if (!err) {
-        prepend.push(
-          Value(unboxIfNeeded({key: rootId, value}))
-        )
+        var msg = unboxIfNeeded({key: rootId, value})
+        if (isBlocked(msg)) msg.isBlocked = true
+        prepend.push(Value(msg))
       }
     })
 
     var backlinks = api.backlinks.obs.for(rootId)
     var replies = map(computed(backlinks, (msgs) => {
       return msgs.filter(msg => {
-        return msg.value.content.type !== 'vote' && (
-          api.message.sync.root(msg) === rootId ||
-          matchAny(msg.value.content.branch, rootId)
-        )
+        const { type, branch } = msg.value.content
+        return type !== 'vote' && !isBlocked(msg) && (root(msg) === rootId || matchAny(branch, rootId))
       })
     }), x => Value(x), {
       // avoid refresh of entire list when items added

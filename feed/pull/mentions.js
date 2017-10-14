@@ -4,7 +4,8 @@ const pull = require('pull-stream')
 const ref = require('ssb-ref')
 
 exports.needs = nest({
-  'sbot.pull.backlinks': 'first'
+  'sbot.pull.backlinks': 'first',
+  'message.sync.isBlocked': 'first'
 })
 
 exports.gives = nest('feed.pull.mentions')
@@ -29,7 +30,10 @@ exports.create = function (api) {
         ]
       })
 
-      return api.sbot.pull.backlinks(opts)
+      return pull(
+        api.sbot.pull.backlinks(opts),
+        pull.filter(msg => !api.message.sync.isBlocked(msg))
+      )
     }
   })
 }
