@@ -43,8 +43,10 @@ exports.create = function (api) {
         },
         toUrl: (id) => {
           if (ref.isBlob(id)) return api.blob.sync.url(id)
-          if (ref.isLink(id) || id.startsWith('#') || id.startsWith('?')) {
-            return mentions[id] || id
+          if (mentions[id]) {
+            return mentions[id]
+          } else if (ref.isLink(id) || id.startsWith('#') || id.startsWith('?')) {
+            return id
           }
           return false
         },
