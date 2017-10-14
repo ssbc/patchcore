@@ -3,20 +3,18 @@ const nest = require('depnest')
 exports.gives = nest('message.sync.isBlocked')
 
 exports.needs = nest({
-  'contact.obs.blocking': 'first'
+  'contact.obs.blocking': 'first',
   'keys.sync.id': 'first'
 })
 
 exports.create = function (api) {
-  var _myBlocking
+  var cache = null
 
   return nest('message.sync.isBlocked', function isBlockedMessage (msg) {
-    if (!_myBlocking) {
-      const myKey = api.keys.sync.id()
-      _myBlocking = api.contact.obs.blocking(myKey) 
+    if (!cache) {
+      cache = api.contact.obs.blocking(api.keys.sync.id())
     }
 
-    return _myBlocking.includes(msg.value.author)
+    return cache().includes(msg.value.author)
   })
 }
-

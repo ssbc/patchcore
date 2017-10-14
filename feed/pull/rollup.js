@@ -85,7 +85,7 @@ exports.create = function (api) {
       // FILTER
       pull.filter(msg => msg && msg.value && !api.message.sync.root(msg)),
       pull.filter(rootFilter || (() => true)),
-      pull.filter(msg => !api.message.sync.isBlocked(msg))
+      pull.filter(msg => !api.message.sync.isBlocked(msg)),
 
       // ADD REPLIES
       pull.asyncMap((rootMessage, cb) => {
@@ -93,8 +93,7 @@ exports.create = function (api) {
         var backlinks = api.backlinks.obs.for(rootMessage.key)
         onceTrue(backlinks.sync, () => {
           var replies = resolve(backlinks).filter(msg => {
-            return api.message.sync.root(msg) === rootMessage.key
-              && !api.message.sync.isBlocked(msg)
+            return api.message.sync.root(msg) === rootMessage.key && !api.message.sync.isBlocked(msg)
           })
           cb(null, extend(rootMessage, { replies }))
         })
