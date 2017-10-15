@@ -11,25 +11,41 @@ exports.needs = nest({
   }
 })
 
-exports.gives = nest('message.html.render')
+exports.gives = nest({
+  'message.html': {
+    canRender: true,
+    render: true
+  }
+})
 
-exports.create = function (api) {
-  return nest('message.html.render', channel)
+exports.create = function(api) {
+  return nest('message.html', {
+    canRender: isRenderable,
+    render: channel
+  })
 
-  function channel (msg, opts) {
-    if (msg.value.content.type !== 'channel') return
+  function channel(msg, opts) {
+    if (!isRenderable(msg)) return
     var element = api.message.html.layout(msg, extend({
       content: renderContent(msg),
       layout: 'mini'
     }, opts))
 
-    return api.message.html.decorate(element, { msg })
+    return api.message.html.decorate(element, {
+      msg
+    })
   }
 
-  function renderContent (msg) {
+  function renderContent(msg) {
     var channel = '#' + msg.value.content.channel
     return [
-	msg.value.content.subscribed ? 'subscribed to channel' : 'unsubscribed from channel', ' ', h('a.channel', {href: channel}, channel)
+      msg.value.content.subscribed ? 'subscribed to channel' : 'unsubscribed from channel', ' ', h('a.channel', {
+        href: channel
+      }, channel)
     ]
+  }
+
+  function isRenderable(msg) {
+    return msg.value.content.type === 'channel' ? true : undefined
   }
 }
