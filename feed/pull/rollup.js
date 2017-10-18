@@ -83,7 +83,7 @@ exports.create = function (api) {
       }),
 
       // FILTER
-      pull.filter(msg => msg && msg.value && !api.message.sync.root(msg)),
+      pull.filter(msg => msg && msg.value),
       pull.filter(rootFilter || (() => true)),
       pull.filter(msg => !api.message.sync.isBlocked(msg)),
 
