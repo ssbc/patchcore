@@ -11,19 +11,31 @@ exports.needs = nest({
   }
 })
 
-exports.gives = nest('message.html.render')
+exports.gives = nest({
+  'message.html': {
+    canRender: true,
+    render: true
+  }
+})
 
 exports.create = function (api) {
-  return nest('message.html.render', vote)
+  return nest('message.html', {
+    canRender: isRenderable,
+    render: vote
+  })
 
   function vote (msg, opts) {
-    if (msg.value.content.type !== 'vote') return
+    if (!isRenderable(msg)) return
     var element = api.message.html.layout(msg, extend({
       content: renderContent(msg),
       layout: 'mini'
     }, opts))
 
     return api.message.html.decorate(element, { msg })
+  }
+
+  function isRenderable(msg) {
+    return msg.value.content.type === 'vote' ? true : undefined
   }
 
   function renderContent (msg) {
