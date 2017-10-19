@@ -18,10 +18,10 @@ exports.gives = nest({
   }
 })
 
-exports.create = function(api) {
+exports.create = function (api) {
   return nest('message.html', {
     canRender: isRenderable,
-    render: function(msg, opts) {
+    render: function (msg, opts) {
       if (!isRenderable(msg)) return
       var element = api.message.html.layout(msg, extend({
         content: messageContent(msg),
@@ -34,12 +34,12 @@ exports.create = function(api) {
     }
   })
 
-  function messageContent(data) {
+  function messageContent (data) {
     if (!data.value.content || !data.value.content.text) return
     return h('div', {}, api.message.html.markdown(data.value.content))
   }
 
-  function isRenderable(msg) {
+  function isRenderable (msg) {
     return msg.value.content.type === 'issue' ? true : undefined
   }
 }

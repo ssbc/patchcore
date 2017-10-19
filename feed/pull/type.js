@@ -5,7 +5,7 @@ const pull = require('pull-stream')
 exports.gives = nest('feed.pull.type')
 exports.needs = nest({
   'sbot.pull.messagesByType': 'first',
-  'message.sync.isBlocked': 'first',
+  'message.sync.isBlocked': 'first'
 })
 
 exports.create = function (api) {

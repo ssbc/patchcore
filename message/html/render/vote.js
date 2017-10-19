@@ -34,7 +34,7 @@ exports.create = function (api) {
     return api.message.html.decorate(element, { msg })
   }
 
-  function isRenderable(msg) {
+  function isRenderable (msg) {
     return msg.value.content.type === 'vote' ? true : undefined
   }
 

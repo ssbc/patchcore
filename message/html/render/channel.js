@@ -18,13 +18,13 @@ exports.gives = nest({
   }
 })
 
-exports.create = function(api) {
+exports.create = function (api) {
   return nest('message.html', {
     canRender: isRenderable,
     render: channel
   })
 
-  function channel(msg, opts) {
+  function channel (msg, opts) {
     if (!isRenderable(msg)) return
     var element = api.message.html.layout(msg, extend({
       content: renderContent(msg),
@@ -36,7 +36,7 @@ exports.create = function(api) {
     })
   }
 
-  function renderContent(msg) {
+  function renderContent (msg) {
     var channel = '#' + msg.value.content.channel
     return [
       msg.value.content.subscribed ? 'subscribed to channel' : 'unsubscribed from channel', ' ', h('a.channel', {
@@ -45,7 +45,7 @@ exports.create = function(api) {
     ]
   }
 
-  function isRenderable(msg) {
+  function isRenderable (msg) {
     return msg.value.content.type === 'channel' ? true : undefined
   }
 }
