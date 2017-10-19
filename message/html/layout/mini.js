@@ -11,9 +11,9 @@ exports.needs = nest('message.html', {
 exports.gives = nest('message.html.layout')
 
 exports.create = (api) => {
-  return nest('message.html.layout', message_layout)
+  return nest('message.html.layout', messageLayout)
 
-  function message_layout (msg, opts) {
+  function messageLayout (msg, opts) {
     if (opts.layout !== 'mini') return
     return h('div', {
       classList: 'Message -mini'

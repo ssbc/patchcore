@@ -1,10 +1,12 @@
+'use strict'
+
 var nest = require('depnest')
 var { Value, computed } = require('mutant')
 var pull = require('pull-stream')
 var ref = require('ssb-ref')
 
 exports.needs = nest({
-  'sbot.pull.stream': 'first',
+  'sbot.pull.stream': 'first'
 })
 
 exports.gives = nest({
@@ -72,7 +74,7 @@ exports.create = function (api) {
               update(source, item[source], cache)
 
               // generate reverse lookup
-              for (var dest in item[source]) {
+              for (let dest in item[source]) {
                 reverse[dest] = reverse[dest] || {}
                 reverse[dest][source] = item[source][dest]
               }
@@ -80,7 +82,7 @@ exports.create = function (api) {
           }
 
           // populate reverse observable cache
-          for (var dest in reverse) {
+          for (let dest in reverse) {
             update(dest, reverse[dest], reverseCache)
           }
 

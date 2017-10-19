@@ -2,7 +2,6 @@ var nest = require('depnest')
 var ref = require('ssb-ref')
 var MutantArray = require('mutant/array')
 var concat = require('mutant/concat')
-var watch = require('mutant/watch')
 
 var { computed } = require('mutant')
 

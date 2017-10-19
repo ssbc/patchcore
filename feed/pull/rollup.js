@@ -14,7 +14,7 @@ exports.needs = nest({
   'sbot.async.get': 'first',
   'message.sync.isBlocked': 'first',
   'message.sync.root': 'first',
-  'message.sync.unbox': 'first',
+  'message.sync.unbox': 'first'
 })
 
 exports.gives = nest('feed.pull.rollup', true)

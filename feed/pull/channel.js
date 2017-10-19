@@ -5,7 +5,7 @@ var pull = require('pull-stream')
 exports.gives = nest('feed.pull.channel')
 exports.needs = nest({
   'sbot.pull.backlinks': 'first',
-  'message.sync.isBlocked': 'first',
+  'message.sync.isBlocked': 'first'
 })
 
 exports.create = function (api) {
