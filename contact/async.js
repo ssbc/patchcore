@@ -1,6 +1,4 @@
 var nest = require('depnest')
-var onceTrue = require('mutant/once-true')
-var resolve = require('mutant/resolve')
 var ref = require('ssb-ref')
 
 exports.needs = nest({
@@ -58,4 +56,3 @@ exports.create = function (api) {
     }, cb)
   }
 }
-

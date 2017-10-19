@@ -1,4 +1,3 @@
-var h = require('mutant/h')
 var nest = require('depnest')
 var extend = require('xtend')
 
