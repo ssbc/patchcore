@@ -15,6 +15,7 @@ exports.create = function (api) {
         root = msg.value.content.about
       }
 
+      // only abouts and likes for messages (not feeds) will be returned
       if (ref.isMsg(root)) return root
     }
   })

@@ -2,7 +2,8 @@ var nest = require('depnest')
 var computed = require('mutant/computed')
 
 exports.needs = nest({
-  'backlinks.obs.for': 'first'
+  'backlinks.obs.for': 'first',
+  'message.sync.root': 'first'
 })
 
 exports.gives = nest('message.obs.backlinks', true)
@@ -27,7 +28,7 @@ exports.create = function (api) {
       id: msg.key,
       timestamp: msg.timestamp,
       type: msg.value.content.type,
-      root: msg.value.content.root,
+      root: api.message.sync.root(msg),
       branch: msg.value.content.branch,
       author: msg.value.author
     }
