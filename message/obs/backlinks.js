@@ -18,9 +18,6 @@ exports.create = function (api) {
       return msgs.map(map).filter((backlink) => {
         return backlink.type !== 'vote' && backlink.type !== 'about'
       })
-    }, {
-      // objects coming down this stream will be immutable
-      comparer: (a, b) => a === b
     })
   }
 
