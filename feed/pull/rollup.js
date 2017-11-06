@@ -4,17 +4,15 @@
 
 var pull = require('pull-stream')
 var nest = require('depnest')
-var extend = require('xtend')
 var HLRU = require('hashlru')
-var resolve = require('mutant/resolve')
-var onceTrue = require('mutant/once-true')
 
 exports.needs = nest({
   'backlinks.obs.for': 'first',
   'sbot.async.get': 'first',
   'message.sync.isBlocked': 'first',
   'message.sync.root': 'first',
-  'message.sync.unbox': 'first'
+  'message.sync.unbox': 'first',
+  'feed.pull.withReplies': 'first'
 })
 
 exports.gives = nest('feed.pull.rollup', true)
@@ -88,16 +86,7 @@ exports.create = function (api) {
       pull.filter(msg => !api.message.sync.isBlocked(msg)),
 
       // ADD REPLIES
-      pull.asyncMap((rootMessage, cb) => {
-        // use global backlinks cache
-        var backlinks = api.backlinks.obs.for(rootMessage.key)
-        onceTrue(backlinks.sync, () => {
-          var replies = resolve(backlinks).filter(msg => {
-            return api.message.sync.root(msg) === rootMessage.key && !api.message.sync.isBlocked(msg)
-          })
-          cb(null, extend(rootMessage, { replies }))
-        })
-      })
+      api.feed.pull.withReplies()
     )
   })
 }
