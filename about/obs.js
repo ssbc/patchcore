@@ -168,7 +168,7 @@ function getValue (item) {
       return item[0]
     } else if (item[0] && item[0].link && ref.isLink(item[0].link) && !item[0].remove) {
       return item[0].link
-    } else if (Array.isArray(item)) { // tags
+    } else if (Array.isArray(item[0])) { // tags
       return item[0]
     }
   }
