@@ -5,11 +5,13 @@ var pull = require('pull-stream')
 exports.gives = nest('feed.pull.channel')
 exports.needs = nest({
   'sbot.pull.backlinks': 'first',
+  'channel.sync.normalize': 'first',
   'message.sync.isBlocked': 'first'
 })
 
 exports.create = function (api) {
   return nest('feed.pull.channel', function (channel) {
+    channel = api.channel.sync.normalize(channel)
     if (typeof channel !== 'string') throw new Error('a channel name be specified')
 
     return function (opts) {
