@@ -45,12 +45,20 @@ exports.create = function(api) {
       live: true
     })
 
+    var msgFilter = pull.filter((msg) => {
+      // We do not include the 'sync' message which indicates that any
+      // further messages are newly gossiped messages in the list of messages.
+      if (msg.sync) {
+        sync.set(true)
+        return false
+      } else {
+        return filterFn(msg)
+      }
+    })
+
     var filteredBacklinks = pull(
       msgBacklinks,
-      pull(
-        pull.map(setSyncIfSyncMsg.bind(null, sync),
-          pull.filter(filterFn)
-        ))
+      msgFilter
     )
 
     var backlinksObs = MutantPullReduce(filteredBacklinks, (state, msg) => {
@@ -69,12 +77,4 @@ exports.create = function(api) {
   return nest({
     "backlinks.filter.obs": (id, filterFn) => pullFilterReduceObs(id, filterFn)
   })
-}
-
-function setSyncIfSyncMsg(syncObs, msg) {
-  if (msg.sync) {
-    syncObs.set(true)
-  }
-
-  return msg
 }
