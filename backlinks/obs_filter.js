@@ -10,12 +10,12 @@ exports.needs = nest({
 exports.gives = nest("backlinks.obs.filter", true)
 
 /**
- * sbot.filter.obs returns an observable list of messages that link
+ * sbot.obs.filter returns an observable list of messages that link
  * back to the message with the given message ID (@id). Only messages that
  * pass the filter are added to the list.
  *
  * When a message arrives, if a filter function is given in the options (opts.filter)
- * and passing it to the filter function (opts.filter) not result in it returning
+ * and passing it to the filter function does not result in it returning
  * 'true' the message is not added to the observable list.
  *
  * A 'sync' observable property is also added to the returned observable
