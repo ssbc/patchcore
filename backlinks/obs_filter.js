@@ -38,7 +38,7 @@ exports.create = function(api) {
 
     var msgBacklinks = api.sbot.pull.backlinks({
       query: [sbotFilter],
-      live: true
+      sync: true
     })
 
     // If a filter function is supplied in the options, we use it to filter
