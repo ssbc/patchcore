@@ -1,7 +1,6 @@
 var nest = require('depnest')
 var pull = require('pull-stream')
 var MutantPullReduce = require('mutant-pull-reduce')
-var Value = require('mutant/value')
 
 exports.needs = nest({
   'sbot.pull.backlinks': 'first'
