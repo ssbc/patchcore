@@ -35,7 +35,8 @@ exports.gives = {
       feed: true,
       links: true,
       backlinks: true,
-      stream: true
+      stream: true,
+      getBlob: true
     },
     obs: {
       connectionStatus: true,
@@ -240,7 +241,10 @@ exports.create = function (api) {
             stream.resolve(fn(connection))
           })
           return stream
-        }
+        },
+        getBlob: rec.source(function (opts) {
+          return sbot.blobs.get(opts)
+        })
       },
       obs: {
         connectionStatus: (listener) => connectionStatus(listener),
@@ -262,3 +266,5 @@ exports.create = function (api) {
     }
   }
 }
+
+
