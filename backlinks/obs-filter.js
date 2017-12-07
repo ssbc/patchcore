@@ -6,7 +6,7 @@ exports.needs = nest({
   'sbot.pull.backlinks': 'first'
 })
 
-exports.gives = nest("backlinks.obs.filter", true)
+exports.gives = nest('backlinks.obs.filter', true)
 
 /**
  * sbot.obs.filter returns an observable list of messages that link
@@ -23,10 +23,10 @@ exports.gives = nest("backlinks.obs.filter", true)
  * Note: Unlike backlinks.obs.for this does not cache the observable for
  * callers that supply the same arguments.
  */
-exports.create = function(api) {
-  function pullFilterReduceObs(id, opts) {
-    if (!id || typeof(id) !== "string") {
-      throw new Error("id must be a string.")
+exports.create = function (api) {
+  function pullFilterReduceObs (id, opts) {
+    if (!id || typeof (id) !== 'string') {
+      throw new Error('id must be a string.')
     }
 
     var sbotFilter = {
@@ -51,17 +51,17 @@ exports.create = function(api) {
 
     var backlinksObs = MutantPullReduce(filteredBacklinks, (state, msg) => {
       state.push(msg)
-      return state;
+      return state
     }, {
       startValue: [],
       nextTick: true,
       sync: true
     })
 
-    return backlinksObs;
+    return backlinksObs
   }
 
   return nest({
-    "backlinks.obs.filter": (id, opts) => pullFilterReduceObs(id, opts)
+    'backlinks.obs.filter': (id, opts) => pullFilterReduceObs(id, opts)
   })
 }
