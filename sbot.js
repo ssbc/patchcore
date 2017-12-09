@@ -155,7 +155,9 @@ exports.create = function (api) {
               return ref.isFeed(e) ? e : e.link
             }))
           } else {
-            Object.keys(flat(content)).forEach(val => {
+            var flatContent = flat(content)
+            Object.keys(flatContent).forEach(key => {
+              var val = flatContent[key]
               if (ref.isBlob(val)) {
                 sbot.blobs.push(val, err => {
                   if (err) console.error(err)
