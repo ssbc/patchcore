@@ -42,7 +42,7 @@ exports.create = function (api) {
           return renderEmoji(emoji, url)
         },
         toUrl: (id) => {
-          if (ref.isBlob(id)) return api.blob.sync.url(id)
+          if (id[0] == '&') return api.blob.sync.url(id)
           if (mentions[id]) {
             return mentions[id]
           } else if (ref.isLink(id) || id.startsWith('#') || id.startsWith('?')) {
