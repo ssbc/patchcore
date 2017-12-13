@@ -46,6 +46,17 @@ module.exports = {
       obs: {
         recent: require('./feed/obs/recent'),
         thread: require('./feed/obs/thread'),
+      },
+      pull: {
+        channel: require('./feed/pull/channel'),
+        mentions: require('./feed/pull/mentions'),
+        private: require('./feed/pull/private'),
+        profile: require('./feed/pull/profile'),
+        public: require('./feed/pull/public'),
+        rollup: require('./feed/pull/rollup'),
+        type: require('./feed/pull/type'),
+        unique: require('./feed/pull/unique'),
+        withReplies: require('./feed/pull/with-replies'),
       }
     },
     lib: {
@@ -73,8 +84,16 @@ module.exports = {
           },
           link: require('./message/html/link'),
           markdown: require('./message/html/markdown'),
-          meta: {},
-          render: {},
+          meta: {
+            channel: require('./message/html/meta/channel'),
+          },
+          render: {
+            channel: require('./message/html/render/channel'),
+            issue: require('./message/html/render/issue'),
+            post: require('./message/html/render/post'),
+            vote: require('./message/html/render/vote'),
+            zzzFallback: require('./message/html/render/zzz-fallback'),
+          },
           timestamp: require('./message/html/timestamp')
         },
       obs: {
@@ -98,15 +117,4 @@ module.exports = {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
 
