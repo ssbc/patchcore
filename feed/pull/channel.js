@@ -25,9 +25,7 @@ exports.create = function (api) {
 
       var filter = {
         dest: `#${channel}`,
-        value: {
-          timestamp: typeof lt === 'number' ? {$lt: lt, $gt: 0} : {$gt: 0}
-        }
+        rts: typeof lt === 'number' ? {$lt: lt, $gt: 0} : {$gt: 0}
       }
 
       return pull(
