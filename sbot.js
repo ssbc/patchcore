@@ -7,6 +7,7 @@ var createClient = require('ssb-client')
 var createFeed = require('ssb-feed')
 var nest = require('depnest')
 var ssbKeys = require('ssb-keys')
+var flat = require('flat')
 
 exports.needs = nest({
   'config.sync.load': 'first',
@@ -154,10 +155,12 @@ exports.create = function (api) {
             content = ssbKeys.box(content, content.recps.map(e => {
               return ref.isFeed(e) ? e : e.link
             }))
-          } else if (content.mentions) {
-            content.mentions.forEach(mention => {
-              if (ref.isBlob(mention.link)) {
-                sbot.blobs.push(mention.link, err => {
+          } else {
+            var flatContent = flat(content)
+            Object.keys(flatContent).forEach(key => {
+              var val = flatContent[key]
+              if (ref.isBlob(val)) {
+                sbot.blobs.push(val, err => {
                   if (err) console.error(err)
                 })
               }

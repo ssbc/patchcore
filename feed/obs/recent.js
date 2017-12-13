@@ -9,7 +9,8 @@ var hr = 60 * 60 * 1000
 exports.gives = nest('feed.obs.recent')
 
 exports.needs = nest({
-  'sbot.pull.log': 'first'
+  'sbot.pull.log': 'first',
+  'message.sync.timestamp': 'first'
 })
 
 exports.create = function (api) {
@@ -22,7 +23,7 @@ exports.create = function (api) {
     )
 
     var result = MutantPullReduce(stream, (result, msg) => {
-      if (msg.value.timestamp && Date.now() - msg.value.timestamp < 24 * hr) {
+      if (api.message.sync.timestamp(msg) && Date.now() - api.message.sync.timestamp(msg) < 24 * hr) {
         result.add(msg.value.author)
       }
       return result

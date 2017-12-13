@@ -6,7 +6,8 @@ exports.gives = nest('feed.pull.channel')
 exports.needs = nest({
   'sbot.pull.backlinks': 'first',
   'channel.sync.normalize': 'first',
-  'message.sync.isBlocked': 'first'
+  'message.sync.isBlocked': 'first',
+  'message.sync.timestamp': 'first'
 })
 
 exports.create = function (api) {
@@ -17,16 +18,14 @@ exports.create = function (api) {
     return function (opts) {
       // handle last item passed in as lt
       var lt = (opts.lt && opts.lt.value)
-        ? opts.lt.value.timestamp
+        ? api.message.sync.timestamp(opts.lt)
         : opts.lt
 
       delete opts.lt
 
       var filter = {
         dest: `#${channel}`,
-        value: {
-          timestamp: typeof lt === 'number' ? {$lt: lt, $gt: 0} : {$gt: 0}
-        }
+        rts: typeof lt === 'number' ? {$lt: lt, $gt: 0} : {$gt: 0}
       }
 
       return pull(
