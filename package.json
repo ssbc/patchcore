@@ -31,8 +31,6 @@
   },
   "homepage": "https://github.com/ssbc/patchcore#readme",
   "dependencies": {
-    "bulk-require": "^1.0.0",
-    "bulkify": "^1.4.2",
     "color-hash": "^1.0.3",
     "depnest": "^1.0.2",
     "emoji-named-characters": "^1.0.2",
@@ -62,7 +60,6 @@
   },
   "browserify": {
     "transform": [
-      "bulkify",
       "es2040"
     ]
   },
@@ -73,3 +70,6 @@
     "standard": "^8.6.0"
   }
 }
+
+
+
