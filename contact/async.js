@@ -13,8 +13,6 @@ exports.gives = nest({
 })
 
 exports.create = function (api) {
-  window.thing = merge
-
   return nest({
     'contact.async': {follow, unfollow, followerOf, block, unblock, merge, unmerge}
   })
