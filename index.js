@@ -15,7 +15,8 @@ module.exports = {
       },
     },
     backlinks: {
-      obs: require('./backlinks/obs')
+      obsFilter: require('./backlinks/obs-filter'),
+      obs: require('./backlinks/obs'),
     },
     blob: {
       html: {
