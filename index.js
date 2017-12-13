@@ -106,6 +106,7 @@ module.exports = {
         isBlocked: require('./message/sync/is-blocked'),
         root: require('./message/sync/root'),
         unbox: require('./message/sync/unbox'),
+        timestamp: require('./message/sync/timestamp'),
       }
     },
     router: {
