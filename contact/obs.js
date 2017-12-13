@@ -1,12 +1,13 @@
 'use strict'
 
 var nest = require('depnest')
-var { Value, computed } = require('mutant')
+var { Value, computed, when } = require('mutant')
 var pull = require('pull-stream')
 var ref = require('ssb-ref')
 
 exports.needs = nest({
-  'sbot.pull.stream': 'first'
+  'sbot.pull.stream': 'first',
+  'contact.obs.sameAs': 'first'
 })
 
 exports.gives = nest({
@@ -29,10 +30,10 @@ exports.create = function (api) {
       //   null = neutral (may have unfollowed),
       //   false = blocking
 
-      following: (key) => matchingValueKeys(get(key, cache), true),
-      followers: (key) => matchingValueKeys(get(key, reverseCache), true),
-      blocking: (key) => matchingValueKeys(get(key, cache), false),
-      blockers: (key) => matchingValueKeys(get(key, reverseCache), false)
+      following: (key) => matchingValueKeys(getMerged(key, cache), true),
+      followers: (key) => matchingValueKeys(getMerged(key, reverseCache), true),
+      blocking: (key) => matchingValueKeys(getMerged(key, cache), false),
+      blockers: (key) => matchingValueKeys(getMerged(key, reverseCache), false)
     },
     'sbot.hook.publish': function (msg) {
       if (!isContact(msg)) return
@@ -53,6 +54,7 @@ exports.create = function (api) {
 
   function matchingValueKeys (state, value) {
     var obs = computed(state, state => {
+      if (!state) return []
       return Object.keys(state).filter(key => {
         return state[key] === value
       })
@@ -119,17 +121,69 @@ exports.create = function (api) {
 
   function get (id, lookup) {
     if (!ref.isFeed(id)) throw new Error('Contact state requires an id!')
-    if (!cacheLoading) {
-      cacheLoading = true
-      loadCache()
-    }
+    checkLoaded()
     if (!lookup[id]) {
       lookup[id] = Value({})
     }
     return lookup[id]
   }
+
+  function getMerged (id, lookup) {
+    checkLoaded()
+    var ids = api.contact.obs.sameAs(id)
+    return proxyOnceTrue([sync, ids.sync], computed([ids], ids => {
+      return computed(ids.map(x => get(x, lookup)), (...items) => merge(ids, items))
+    }))
+  }
+
+  function checkLoaded () {
+    if (!cacheLoading) {
+      cacheLoading = true
+      loadCache()
+    }
+  }
+
+  function merge (ids, items) {
+    if (items.length === 1) return items[0]
+    var result = {}
+    var keys = new Set()
+    items.forEach(item => {
+      for (var key in item) {
+        keys.add(key)
+      }
+    })
+
+    keys.forEach(key => {
+      if (ids.includes(key)) return // skip our keys
+
+      var values = new Set()
+      items.forEach(arg => {
+        values.add(arg[key])
+      })
+
+      // HACK: cheap and hacky merge!
+      // TODO: this needs to handle unfollowing and refollowing and unblocking
+      if (values.has(true) && !values.has(false)) {
+        result[key] = true
+      } else if (values.has(false)) {
+        result[key] = false
+      } else if (values.has(null)) {
+        result[key] = null
+      }
+    })
+
+    return result
+  }
 }
 
 function isContact (msg) {
   return msg.value && msg.value.content && msg.value.content.type === 'contact'
+}
+
+function proxyOnceTrue (values, obs) {
+  return computed(values, (...values) => {
+    if (values.every(Boolean)) {
+      return obs
+    }
+  })
 }

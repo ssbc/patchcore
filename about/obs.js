@@ -9,7 +9,9 @@ exports.needs = nest({
   'sbot.pull.stream': 'first',
   'blob.sync.url': 'first',
   'about.sync.shortFeedId': 'first',
-  'keys.sync.id': 'first'
+  'keys.sync.id': 'first',
+  'contact.obs.sameAs': 'first',
+  'contact.obs.rootId': 'first'
 })
 
 exports.gives = nest({
@@ -56,23 +58,23 @@ exports.create = function (api) {
 
   function valueFrom (id, key, author) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    return withSync(computed([get(id), key, author], getValueFrom))
+    return withSync(computed([getMerged(id), key, author], getValueFrom))
   }
 
   function latestValue (id, key) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    return withSync(computed([get(id), key], getLatestValue))
+    return withSync(computed([getMerged(id), key], getLatestValue))
   }
 
   function socialValue (id, key, defaultValue) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    var yourId = api.keys.sync.id()
-    return withSync(computed([get(id), key, id, yourId, defaultValue], getSocialValue))
+    var yourId = api.contact.obs.rootId(api.keys.sync.id())
+    return withSync(computed([getMerged(id), key, id, yourId, defaultValue], getSocialValue))
   }
 
   function groupedValues (id, key) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    return withSync(computed([get(id), key], getGroupedValues))
+    return withSync(computed([getMerged(id), key], getGroupedValues))
   }
 
   function withSync (obs) {
@@ -87,6 +89,58 @@ exports.create = function (api) {
       cache[id] = Value({})
     }
     return cache[id]
+  }
+
+  function getMerged (id) {
+    var ids = ref.isFeed(id) ? api.contact.obs.sameAs(id) : [id]
+    return computed([ids], (ids) => {
+      return computed(ids.map(get), (...items) => {
+        return computed([getAuthorsLookup(items), items], merge)
+      })
+    })
+  }
+
+  function merge (authorsLookup, items) {
+    var result = {}
+    items.forEach(values => {
+      for (var key in values) {
+        var valuesForKey = result[key] = result[key] || {}
+        for (var author in values[key]) {
+          var value = values[key][author]
+          if (authorsLookup[author]) author = authorsLookup[author]
+          if (!valuesForKey[author] || value[1] > valuesForKey[author][1]) {
+            valuesForKey[author] = value
+          }
+        }
+      }
+    })
+    return result
+  }
+
+  function getAuthorsLookup (items) {
+    var authors = getAuthors(items)
+    var roots = authors.map(author => api.contact.obs.rootId(author))
+    return computed(roots, (...roots) => {
+      var result = {}
+      authors.forEach((author, i) => {
+        if (author !== roots[i]) {
+          result[author] = roots[i]
+        }
+      })
+      return result
+    })
+  }
+
+  function getAuthors (items) {
+    var authors = new Set()
+    items.forEach(item => {
+      for (var key in item) {
+        for (var author in item[key]) {
+          authors.add(author)
+        }
+      }
+    })
+    return Array.from(authors)
   }
 
   function load () {
