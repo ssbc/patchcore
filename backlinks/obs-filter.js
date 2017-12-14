@@ -37,7 +37,8 @@ exports.create = function (api) {
 
     var msgBacklinks = api.sbot.pull.backlinks({
       query: [sbotFilter],
-      sync: true
+      index: 'DTA', // use asserted timestamps
+      live: true
     })
 
     // If a filter function is supplied in the options, we use it to filter
