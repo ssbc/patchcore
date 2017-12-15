@@ -37,7 +37,8 @@ exports.create = function (api) {
 
     var msgBacklinks = api.sbot.pull.backlinks({
       query: [sbotFilter],
-      sync: true
+      index: 'DTA', // use asserted timestamps
+      live: true
     })
 
     // If a filter function is supplied in the options, we use it to filter
@@ -46,7 +47,11 @@ exports.create = function (api) {
 
     var filteredBacklinks = pull(
       msgBacklinks,
-      pull.filter(filterFunction)
+      // We need to allow 'msg.sync' even if the supplied filter function does not
+      // match it to allow mutant-pull-reduce to handle it for us and set the
+      // 'sync' observable to indicate that the list is up to date with the messages
+      // received so far.
+      pull.filter(msg => msg.sync || filterFunction(msg))
     )
 
     var backlinksObs = MutantPullReduce(filteredBacklinks, (state, msg) => {
