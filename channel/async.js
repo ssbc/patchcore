@@ -2,18 +2,16 @@ var nest = require('depnest')
 var ref = require('ssb-ref')
 
 exports.needs = nest({
-  'keys.sync.id': 'first',
-  'sbot.async.publish': 'first',
-  'channel.obs.subscribed': 'first',
+  'sbot.async.publish': 'first'
 })
 
 exports.gives = nest({
-  'channel.async': ['subscribe', 'unsubscribe', 'isSubscribedTo']
+  'channel.async': ['subscribe', 'unsubscribe']
 })
 
 exports.create = function (api) {
   return nest({
-    'channel.async': {subscribe, unsubscribe, isSubscribedTo}
+    'channel.async': {subscribe, unsubscribe}
   })
 
   function subscribe (channel, cb) {
@@ -32,14 +30,5 @@ exports.create = function (api) {
       channel: channel,
       subscribed: false
     }, cb)
-  }
-
-  function isSubscribedTo (channel, cb) {
-    const myId = api.keys.sync.id()
-        
-    const { subscribed } = api.channel.obs
-    const myChannels = subscribed(myId)
-    let v = myChannels().values()
-    return [...v].includes(channel)
   }
 }
