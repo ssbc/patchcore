@@ -7,7 +7,8 @@ var ref = require('ssb-ref')
 var throttle = require('mutant/throttle')
 
 exports.needs = nest({
-  'sbot.pull.userFeed': 'first'
+  'sbot.pull.userFeed': 'first',
+  'channel.sync.normalize': 'first'
 })
 
 exports.gives = nest({
@@ -47,7 +48,7 @@ exports.create = function (api) {
       var result = MutantPullReduce(stream, (result, msg) => {
         var c = msg.value.content
         if (c.type === 'channel' && typeof c.channel === 'string') {
-          var channel = c.channel.trim()
+          var channel = api.channel.sync.normalize(c.channel)
           if (channel && msg.value.timestamp > (latestTimestamps[channel] || 0)) {
             if (channel) {
               if (typeof c.subscribed === 'boolean') {

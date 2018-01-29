@@ -1,7 +1,3 @@
-// read stream to get events
-// for each item, check to see if already rendered root
-// accept prioritized list (render these first)
-
 var pull = require('pull-stream')
 var nest = require('depnest')
 var HLRU = require('hashlru')
@@ -12,7 +8,8 @@ exports.needs = nest({
   'message.sync.isBlocked': 'first',
   'message.sync.root': 'first',
   'message.sync.unbox': 'first',
-  'feed.pull.withReplies': 'first'
+  'feed.pull.withReplies': 'first',
+  'feed.pull.unique': 'first'
 })
 
 exports.gives = nest('feed.pull.rollup', true)
@@ -23,7 +20,6 @@ exports.create = function (api) {
   var cache = HLRU(100)
 
   return nest('feed.pull.rollup', function (rootFilter) {
-    var seen = new Set()
     return pull(
       pull.map(msg => {
         if (msg.value) {
@@ -38,18 +34,7 @@ exports.create = function (api) {
       }),
 
       // UNIQUE
-      pull.filter(idOrMsg => {
-        if (idOrMsg) {
-          if (idOrMsg.key) idOrMsg = idOrMsg.key
-          if (typeof idOrMsg === 'string') {
-            var key = idOrMsg
-            if (!seen.has(key)) {
-              seen.add(key)
-              return true
-            }
-          }
-        }
-      }),
+      api.feed.pull.unique(),
 
       // LOOKUP (if needed)
       pull.asyncMap((keyOrMsg, cb) => {
