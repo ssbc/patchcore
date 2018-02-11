@@ -109,7 +109,7 @@ exports.create = function (api) {
         sbot.gossip.changes(),
         pull.drain(data => {
           if (data.peer) {
-            if (data.type === 'remove') {
+            if (data.type === 'remove' || data.type === 'disconnect') {
               connectedPeers.delete(data.peer.key)
               localPeers.delete(data.peer.key)
             } else {
