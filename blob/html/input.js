@@ -58,6 +58,8 @@ module.exports = {
                   size: reader.result.length || reader.result.byteLength,
                   type: mimeType
                 })
+
+                ev.target.value = ''
               })
             }
             reader.readAsArrayBuffer(file)
