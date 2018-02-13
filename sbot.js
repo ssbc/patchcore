@@ -69,7 +69,9 @@ exports.create = function (api) {
       port: config.port,
       key: config.key,
       appKey: config.caps.shs,
-      timers: config.timers
+      timers: config.timers,
+      caps: config.caps,
+      friends: config.friends
     }
 
     createClient(keys, opts, function (err, _sbot) {
