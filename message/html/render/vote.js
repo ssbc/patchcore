@@ -34,7 +34,7 @@ exports.create = function (api) {
   }
 
   function isRenderable (msg) {
-    return msg.value.content.type === 'vote' ? true : undefined
+    return (msg.value.content.type === 'vote' ? true : undefined) && msg.value.content.vote
   }
 
   function renderContent (msg) {
