@@ -1,7 +1,7 @@
 var nest = require('depnest')
 var sort = require('ssb-sort')
 var ref = require('ssb-ref')
-var { Array: MutantArray, Value, map, concat, computed } = require('mutant')
+var { Array: MutantArray, Value, map, computed } = require('mutant')
 
 exports.needs = nest({
   'backlinks.obs.for': 'first',
@@ -42,7 +42,9 @@ exports.create = function (api) {
       comparer: (a, b) => a === b
     })
 
-    var messages = concat([prepend, replies])
+    var messages = computed([prepend, replies], (prepend, replies) => {
+      return sort([...prepend, ...replies])
+    })
 
     var result = {
       messages,
