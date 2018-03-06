@@ -1,7 +1,7 @@
 var nest = require('depnest')
 var sort = require('ssb-sort')
 var ref = require('ssb-ref')
-var { Array: MutantArray, Value, map, computed } = require('mutant')
+var { Array: MutantArray, Value, map, computed, concat } = require('mutant')
 
 exports.needs = nest({
   'backlinks.obs.for': 'first',
@@ -32,19 +32,24 @@ exports.create = function (api) {
     })
 
     var backlinks = api.backlinks.obs.for(rootId)
+
+    // wrap computed in a map to turn into individual observables
     var replies = map(computed(backlinks, (msgs) => {
-      return msgs.filter(msg => {
+      return sort(msgs.filter(msg => {
         const { type, branch } = msg.value.content
         return type !== 'vote' && !isBlocked(msg) && (root(msg) === rootId || matchAny(branch, rootId))
-      })
+      }))
     }), x => Value(x), {
       // avoid refresh of entire list when items added
       comparer: (a, b) => a === b
     })
 
-    var messages = computed([prepend, replies], (prepend, replies) => {
-      return sort([...prepend, ...replies])
-    })
+    // append the root message to the sorted replies list
+    // -------------------------
+    // concat preserves the individual observable messages so that clients don't need to 
+    // rerender the entire list when an item is added (map will only be called for new items)
+    // (we can't use a computed here as it would squash the individual observables into a single one)
+    var messages = concat([prepend, replies])
 
     var result = {
       messages,
