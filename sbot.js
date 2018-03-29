@@ -100,6 +100,16 @@ exports.create = function (api) {
     })
   }
 
+  setInterval(function () {
+    if (sbot) {
+      sbot.gossip.peers((err, peers) => {
+        if (err) return console.error(err)
+        localPeers.set(peers.filter(x => x.source === 'local').map(x => x.key))
+        connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
+      })
+    }
+  }, 1000 * 60)
+
   watch(connection, (sbot) => {
     if (sbot) {
       sbot.gossip.peers((err, peers) => {
@@ -113,7 +123,6 @@ exports.create = function (api) {
           if (data.peer) {
             if (data.type === 'remove' || data.type === 'disconnect') {
               connectedPeers.delete(data.peer.key)
-              localPeers.delete(data.peer.key)
             } else {
               if (data.peer.source === 'local') {
                 localPeers.add(data.peer.key)
