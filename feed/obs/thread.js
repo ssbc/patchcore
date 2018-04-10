@@ -1,6 +1,9 @@
 var nest = require('depnest')
 var sort = require('ssb-sort')
 var ref = require('ssb-ref')
+var isBlog = require('scuttle-blog/isBlog')
+var Blog = require('scuttle-blog')
+
 var { Array: MutantArray, Value, map, computed, concat } = require('mutant')
 
 exports.needs = nest({
@@ -8,7 +11,8 @@ exports.needs = nest({
   'sbot.async.get': 'first',
   'message.sync.unbox': 'first',
   'message.sync.root': 'first',
-  'message.sync.isBlocked': 'first'
+  'message.sync.isBlocked': 'first',
+  'sbot.obs.connection': 'first'
 })
 
 exports.gives = nest('feed.obs.thread')
@@ -23,11 +27,25 @@ exports.create = function (api) {
 
     var prepend = MutantArray()
     api.sbot.async.get(rootId, (err, value) => {
-      sync.set(true)
       if (!err) {
         var msg = unboxIfNeeded({key: rootId, value})
         if (isBlocked(msg)) msg.isBlocked = true
-        prepend.push(Value(msg))
+
+        if (isBlog(msg)) {
+          // resolve the blog body before returning
+          Blog(api.sbot.obs.connection).async.get(msg, (err, result) => {
+            if (!err) {
+              msg.body = result.body
+              prepend.push(Value(msg))
+              sync.set(true)
+            }
+          })
+        } else {
+          sync.set(true)
+          prepend.push(Value(msg))
+        }
+      } else {
+        sync.set(true)
       }
     })
 
@@ -46,7 +64,7 @@ exports.create = function (api) {
 
     // append the root message to the sorted replies list
     // -------------------------
-    // concat preserves the individual observable messages so that clients don't need to 
+    // concat preserves the individual observable messages so that clients don't need to
     // rerender the entire list when an item is added (map will only be called for new items)
     // (we can't use a computed here as it would squash the individual observables into a single one)
     var messages = concat([prepend, replies])
