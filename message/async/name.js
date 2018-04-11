@@ -24,12 +24,12 @@ exports.create = function (api) {
 
       if (err && err.name === 'NotFoundError') {
         return cb(null, fallbackName + '...(missing)')
+      } else if (value && typeof value.content.title === 'string') {
+        return cb(null, truncate(value.content.title, 40))
       } else if (value && value.content.type === 'post' && typeof value.content.text === 'string') {
         if (value.content.text.trim()) {
           return cb(null, titleFromMarkdown(value.content.text, 40) || fallbackName)
         }
-      } else if (value && typeof value.content.title === 'string') {
-        return cb(null, truncate(value.content.title, 40))
       } else if (value && typeof value.content.text === 'string') {
         return cb(null, value.content.type + ': ' + titleFromMarkdown(value.content.text, 30))
       } else {
