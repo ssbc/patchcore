@@ -47,6 +47,7 @@
     "pull-cat": "^1.1.11",
     "pull-reconnect": "0.0.3",
     "pull-stream": "^3.5.0",
+    "scuttle-blog": "^1.0.0",
     "simple-mime": "^0.1.0",
     "sorted-array-functions": "^1.0.0",
     "split-buffer": "^1.0.0",
