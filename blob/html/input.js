@@ -1,12 +1,19 @@
 var h = require('mutant/h')
+var resolve = require('mutant/resolve')
+var onceTrue = require('mutant/once-true')
 var pull = require('pull-stream')
 var mime = require('simple-mime')('application/octect-stream')
 var split = require('split-buffer')
 var nest = require('depnest')
+var Defer = require('pull-defer')
+var BoxStream = require('pull-box-stream')
+var crypto = require('crypto')
+var zeros = Buffer.alloc(24, 0)
 
 module.exports = {
   needs: nest({
-    'sbot.async.addBlob': 'first'
+    'sbot.obs.connection': 'first'
+
   }),
   gives: nest('blob.html.input'),
   create: function (api) {
@@ -50,7 +57,10 @@ module.exports = {
             var reader = new global.FileReader()
             reader.onload = function () {
               var stream = pull.values(split(new Buffer(reader.result), 64 * 1024))
-              api.sbot.async.addBlob(stream, function (err, blob) {
+              pull(stream, AddBlob({
+                connection: api.sbot.obs.connection,
+                encrypt: resolve(opts.private)
+              }, (err, blob) => {
                 if (err) return console.error(err)
                 onAdded({
                   link: blob,
@@ -60,7 +70,7 @@ module.exports = {
                 })
 
                 ev.target.value = ''
-              })
+              }))
             }
             reader.readAsArrayBuffer(file)
           }
@@ -157,4 +167,56 @@ function rotate (img, orientation) {
 
   ctx.drawImage(img, -img.width / 2, -img.height / 2)
   return canvas
+}
+
+function AddBlob ({connection, encrypt = false}, cb) {
+  var stream = Defer.sink()
+  onceTrue(connection, sbot => {
+    if (encrypt) {
+      // FROM: https://github.com/ssbc/ssb-secret-blob/blob/master/index.js
+      // here we need to hash something twice, first, hash the plain text to use as the
+      // key. This has the benefit of encrypting deterministically - the same file will
+      // have the same hash. This can be used to deduplicate storage, but has privacy
+      // implications. I do it here just because it's early days and this makes testing
+      // easier.
+
+      stream.resolve(Hash(function (err, buffers, key) {
+        if (err) return cb(err)
+        pull(
+          pull.once(Buffer.concat(buffers)),
+          BoxStream.createBoxStream(key, zeros),
+          Hash(function (err, buffers, hash) {
+            if (err) return cb(err)
+            var id = '&' + hash.toString('base64') + '.sha256'
+            pull(
+              pull.values(buffers),
+              sbot.blobs.add(id, function (err) {
+                if (err) return cb(err)
+                sbot.blobs.push(id, function (err) {
+                  if (err) return cb(err)
+                  cb(null, id + '?unbox=' + key.toString('base64') + '.boxs')
+                })
+              })
+            )
+          })
+        )
+      }))
+    } else {
+      stream.resolve(sbot.blobs.add(cb))
+    }
+  })
+  return stream
+}
+
+function Hash (cb) {
+  var hash = crypto.createHash('sha256')
+  var buffers = []
+  var hasher = pull.drain(function (data) {
+    data = typeof data === 'string' ? new Buffer(data) : data
+    buffers.push(data)
+    hash.update(data)
+  }, function (err) {
+    cb(err, buffers, hash.digest())
+  })
+  return hasher
 }
