@@ -20,9 +20,13 @@ exports.create = function (api) {
     if (typeof content === 'string') { content = {text: content} }
     // handle patchwork style mentions and custom emoji.
     var mentions = {}
+    var typeLookup = {}
     var emojiMentions = {}
     if (Array.isArray(content.mentions)) {
       content.mentions.forEach(function (link) {
+        if (link && link.link && link.type) {
+          typeLookup[link.link] = link.type
+        }
         if (link && link.name && link.link) {
           if (link.emoji) emojiMentions[link.name] = link.link
           else mentions['@' + link.name] = link.link
@@ -42,7 +46,16 @@ exports.create = function (api) {
           return renderEmoji(emoji, url)
         },
         toUrl: (id) => {
-          if (id.startsWith('&')) return api.blob.sync.url(id)
+          if (id.startsWith('&')) {
+            var url = api.blob.sync.url(id)
+
+            if (typeLookup[id]) {
+              var separator = url.includes('?') ? '&' : '?'
+              url += separator + 'contentType=' + escape(typeLookup[id])
+            }
+
+            return url
+          }
           if (mentions[id]) {
             return mentions[id]
           } else if (ref.isLink(id) || id.startsWith('#') || id.startsWith('?')) {
