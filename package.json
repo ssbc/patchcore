@@ -58,7 +58,7 @@
     "ssb-feed": "^2.3.0",
     "ssb-friends": "^2.2.3",
     "ssb-keys": "^7.0.9",
-    "ssb-markdown": "^3.3.1",
+    "ssb-markdown": "github:ssbc/ssb-markdown#embed-audio-video",
     "ssb-ref": "github:ssbc/ssb-ref#secret-blobs",
     "ssb-sort": "^1.0.0",
     "xtend": "^4.0.1"
