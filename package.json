@@ -59,7 +59,7 @@
     "ssb-friends": "^2.2.3",
     "ssb-keys": "^7.0.9",
     "ssb-markdown": "^3.3.1",
-    "ssb-ref": "^2.9.0",
+    "ssb-ref": "github:ssbc/ssb-ref#secret-blobs",
     "ssb-sort": "^1.0.0",
     "xtend": "^4.0.1"
   },

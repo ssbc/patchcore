@@ -4,6 +4,7 @@ const ref = require('ssb-ref')
 const nest = require('depnest')
 var htmlEscape = require('html-escape')
 var watch = require('mutant/watch')
+const querystring = require('querystring');
 
 exports.needs = nest({
   'blob.sync.url': 'first',
@@ -46,15 +47,13 @@ exports.create = function (api) {
           return renderEmoji(emoji, url)
         },
         toUrl: (id) => {
-          if (id.startsWith('&')) {
-            var url = api.blob.sync.url(id)
-
-            if (typeLookup[id]) {
-              var separator = url.includes('?') ? '&' : '?'
-              url += separator + 'contentType=' + escape(typeLookup[id])
-            }
-
-            return url
+          if (ref.isBlob(id)) {
+            var blob = ref.parseBlob(id)
+            var url = api.blob.sync.url(blob.id)
+            var query = {}
+            if (blob.key) query['unbox'] = blob.key + '.boxs'
+            if (typeLookup[blob.id]) query['contentType'] = typeLookup[blob.id]
+            return url + '?' + querystring.stringify(query)
           }
           if (mentions[id]) {
             return mentions[id]
