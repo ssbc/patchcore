@@ -19,7 +19,6 @@ exports.create = function (api) {
 
   function markdown (content) {
     if (typeof content === 'string') { content = {text: content} }
-    // handle patchwork style mentions and custom emoji.
     var mentions = {}
     var typeLookup = {}
     var emojiMentions = {}
@@ -29,12 +28,17 @@ exports.create = function (api) {
           typeLookup[link.link] = link.type
         }
         if (link && link.name && link.link) {
-          if (link.emoji) emojiMentions[link.name] = link.link
-          else mentions['@' + link.name] = link.link
+          if (link.emoji) {
+            // handle custom emoji
+            emojiMentions[link.name] = link.link
+          } else {
+            // handle old-style patchwork v2 mentions (deprecated)
+            mentions['@' + link.name] = link.link
+          }
         }
       })
     }
-
+    
     return h('Markdown', {
       hooks: [
         LoadingBlobHook(api.blob.obs.has)
@@ -47,18 +51,18 @@ exports.create = function (api) {
           return renderEmoji(emoji, url)
         },
         toUrl: (id) => {
-          if (ref.isBlob(id)) {
-            var blob = ref.parseBlob(id)
-            var url = api.blob.sync.url(blob.id)
+          var link = ref.parseLink(id)
+          if (link && ref.isBlob(link.link)) {
+            var url = api.blob.sync.url(link.link)
             var query = {}
-            if (blob.key) query['unbox'] = blob.key + '.boxs'
-            if (typeLookup[blob.id]) query['contentType'] = typeLookup[blob.id]
+            if (link.query && link.query.unbox) query['unbox'] = link.query.unbox
+            if (typeLookup[link.link]) query['contentType'] = typeLookup[link.link]
             return url + '?' + querystring.stringify(query)
-          }
-          if (mentions[id]) {
-            return mentions[id]
-          } else if (ref.isLink(id) || id.startsWith('#') || id.startsWith('?')) {
+          } else if (link || id.startsWith('#') || id.startsWith('?')) {
             return id
+          } else if (mentions[id]) {
+            // handle old-style patchwork v2 mentions (deprecated)
+            return mentions[id]
           }
           return false
         },
