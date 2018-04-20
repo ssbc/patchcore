@@ -34,7 +34,7 @@ exports.create = function (api) {
         }
       })
     }
-
+    
     return h('Markdown', {
       hooks: [
         LoadingBlobHook(api.blob.obs.has)
@@ -52,7 +52,7 @@ exports.create = function (api) {
             var url = api.blob.sync.url(blob.link)
             var query = {}
             if (blob.query && blob.query.unbox) query['unbox'] = blob.query.unbox
-            if (typeLookup[blob.id]) query['contentType'] = typeLookup[blob.id]
+            if (typeLookup[blob.link]) query['contentType'] = typeLookup[blob.link]
             return url + '?' + querystring.stringify(query)
           }
           if (mentions[id]) {
