@@ -49,9 +49,9 @@ exports.create = function (api) {
         toUrl: (id) => {
           if (ref.isBlob(id)) {
             var blob = ref.parseBlob(id)
-            var url = api.blob.sync.url(blob.id)
+            var url = api.blob.sync.url(blob.link)
             var query = {}
-            if (blob.key) query['unbox'] = blob.key + '.boxs'
+            if (blob.query && blob.query.unbox) query['unbox'] = blob.query.unbox
             if (typeLookup[blob.id]) query['contentType'] = typeLookup[blob.id]
             return url + '?' + querystring.stringify(query)
           }
