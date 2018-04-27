@@ -17,7 +17,7 @@ exports.create = function (api) {
 
         // guess the author
         var possibleAuthor
-        if (hintMessage && hintMessage.value && hintMessage.content && hintMessage.value.content.reply && ref.isFeed(hintMessage.value.content.reply[key])) {
+        if (hintMessage && hintMessage.value && hintMessage.value.content && hintMessage.value.content.reply && ref.isFeed(hintMessage.value.content.reply[key])) {
           possibleAuthor = hintMessage.value.content.reply[key]
         }
 
