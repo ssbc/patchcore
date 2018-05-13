@@ -1,4 +1,4 @@
-var {Value, computed} = require('mutant')
+var {Value, computed, resolve} = require('mutant')
 var pull = require('pull-stream')
 var nest = require('depnest')
 var ref = require('ssb-ref')
@@ -91,7 +91,7 @@ exports.create = function (api) {
 
   function load () {
     if (!cache) {
-      cache = {}
+      loadCache()
       pull(
         api.sbot.pull.stream(sbot => sbot.about.stream({live: true})),
         pull.drain(item => {
@@ -118,11 +118,33 @@ exports.create = function (api) {
           if (!syncValue()) {
             syncValue.set(true)
           }
+          persistCache()
         })
       )
     }
   }
+
+  function persistCache () {
+    console.log('UPDATING Cache Store for about.obs')
+    if (!localStorage) return
+    var _cache = {}
+    Object.keys(cache).forEach(k => {
+      _cache[k] = resolve(cache[k])
+    })
+    localStorage.patchcoreAboutObs = JSON.stringify(_cache)
+  }
+
+  function loadCache () {
+    cache = {}
+    if (!localStorage) return
+
+    var _cache = JSON.parse(localStorage.patchcoreAboutObs || '{}')
+    Object.keys(_cache).forEach(k => {
+      cache[k] = Value(_cache[k])
+    })
+  }
 }
+
 
 function getSocialValue (lookup, key, id, yourId, fallback) {
   var result = lookup[key] ? getValue(lookup[key][yourId]) || getValue(lookup[key][id]) || highestRank(lookup[key]) : null
