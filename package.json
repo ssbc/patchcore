@@ -43,6 +43,7 @@
     "human-time": "0.0.1",
     "mutant": "^3.21.2",
     "mutant-pull-reduce": "^1.1.0",
+    "piexifjs": "^1.0.4",
     "pull-abortable": "^4.1.0",
     "pull-box-stream": "~1.0.13",
     "pull-cat": "^1.1.11",

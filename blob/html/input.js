@@ -9,11 +9,11 @@ var Defer = require('pull-defer')
 var BoxStream = require('pull-box-stream')
 var crypto = require('crypto')
 var zeros = Buffer.alloc(24, 0)
+var piexif = require('piexifjs')
 
 module.exports = {
   needs: nest({
     'sbot.obs.connection': 'first'
-
   }),
   gives: nest('blob.html.input'),
   create: function (api) {
@@ -28,10 +28,15 @@ module.exports = {
           var mimeType = mime(file.name)
           var fileName = file.name
 
-          // handle exif orientation data and resize
-          getOrientation(file, (orientation) => {
+          getFileData(file, function(fileData) {
+            var orientation = getOrientation(fileData)
+
+            if (opts.removeExif)
+              fileData = removeExif(fileData, orientation)
+
+            // handle exif orientation data and resize
             if (orientation >= 3 || opts.resize) {
-              getImage(file, (image) => {
+              getImage(fileData, (image) => {
                 image = rotate(image, orientation)
                 if (opts.resize) {
                   image = resize(image, opts.resize.width, opts.resize.height)
@@ -44,14 +49,25 @@ module.exports = {
                     next(blob)
                   }, mimeType, 0.85)
                 } else {
-                  next(file)
+                  next(dataURItoBlob(fileData))
                 }
               })
             } else {
               // don't process
-              next(file)
+              next(dataURItoBlob(fileData))
             }
           })
+
+          function dataURItoBlob(dataURI) {
+            var byteString = atob(dataURI.split(',')[1]);
+            var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+            var ab = new ArrayBuffer(byteString.length);
+            var ia = new Uint8Array(ab);
+            for (var i = 0; i < byteString.length; i++) {
+              ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], {type: mimeString});
+          }
 
           function next (file) {
             var reader = new global.FileReader()
@@ -83,7 +99,7 @@ module.exports = {
 function getImage (file, cb) {
   var image = document.createElement('img')
   image.onload = () => cb(image)
-  image.src = global.URL.createObjectURL(file)
+  image.src = file
   image.style.display = 'block'
   if (image.complete) cb(image)
 }
@@ -111,36 +127,30 @@ function resize (image, width, height) {
   return canvas
 }
 
-function getOrientation (file, callback) {
+function getFileData(file, cb)
+{
   var reader = new global.FileReader()
   reader.onload = function (e) {
-    var view = new DataView(e.target.result)
-    if (view.getUint16(0, false) !== 0xFFD8) return callback(-2)
-    var length = view.byteLength
-    var offset = 2
-    while (offset < length) {
-      var marker = view.getUint16(offset, false)
-      offset += 2
-      if (marker === 0xFFE1) {
-        if (view.getUint32(offset += 2, false) !== 0x45786966) return callback(-1)
-        var little = view.getUint16(offset += 6, false) === 0x4949
-        offset += view.getUint32(offset + 4, little)
-        var tags = view.getUint16(offset, little)
-        offset += 2
-        for (var i = 0; i < tags; i++) {
-          if (view.getUint16(offset + (i * 12), little) === 0x0112) {
-            return callback(view.getUint16(offset + (i * 12) + 8, little))
-          }
-        }
-      } else if ((marker & 0xFF00) !== 0xFF00) {
-        break
-      } else {
-        offset += view.getUint16(offset, false)
-      }
-    }
-    return callback(-1)
+    cb(e.target.result)
   }
-  reader.readAsArrayBuffer(file)
+  reader.readAsDataURL(file)
+}
+
+function removeExif (fileData, orientation) {
+  var clean = piexif.remove(fileData)
+  if (orientation != undefined) { // preserve
+    var exifData = { "0th": {} }
+    exifData["0th"][piexif.ImageIFD.Orientation] = orientation
+    var exifStr = piexif.dump(exifData)
+    return piexif.insert(exifStr, clean)
+  }
+  else
+    return clean
+}
+
+function getOrientation (fileData) {
+  var exif = piexif.load(fileData);
+  return exif["0th"][piexif.ImageIFD.Orientation]
 }
 
 function rotate (img, orientation) {
