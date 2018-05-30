@@ -31,7 +31,8 @@ module.exports = {
           getFileData(file, function(fileData) {
             var orientation = getOrientation(fileData)
 
-            if (opts.removeExif)
+            if ((typeof opts.removeExif == 'function' && opts.removeExif()) ||
+                opts.removeExif)
               fileData = removeExif(fileData, orientation)
 
             // handle exif orientation data and resize
