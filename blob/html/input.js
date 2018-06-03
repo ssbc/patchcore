@@ -170,8 +170,8 @@ function rotate (img, orientation) {
   } else if (orientation === 3) {
     canvas.width = img.width
     canvas.height = img.height
-    ctx.rotate(1 * Math.PI)
     ctx.translate(img.width / 2, img.height / 2)
+    ctx.rotate(1 * Math.PI)
   } else {
     return img
   }
