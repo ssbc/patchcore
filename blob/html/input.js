@@ -29,11 +29,20 @@ module.exports = {
           var fileName = file.name
 
           getFileData(file, function(fileData) {
-            var orientation = getOrientation(fileData)
+            var orientation = 0;
+            if (mimeType == "image/jpeg") {
+              try {
+                orientation = getOrientation(fileData)
 
-            if ((typeof opts.removeExif == 'function' && opts.removeExif()) ||
-                opts.removeExif === true)
-              fileData = removeExif(fileData, orientation)
+                if ((typeof opts.removeExif == 'function' && opts.removeExif()) ||
+                  opts.removeExif === true)
+                  fileData = removeExif(fileData, orientation)
+              }
+              catch (ex)
+              {
+                console.log("exif exception:", ex)
+              }
+            }
 
             // handle exif orientation data and resize
             if (orientation >= 3 || opts.resize) {
