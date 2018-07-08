@@ -4,7 +4,7 @@ const ref = require('ssb-ref')
 const nest = require('depnest')
 var htmlEscape = require('html-escape')
 var watch = require('mutant/watch')
-const querystring = require('querystring');
+const querystring = require('querystring')
 
 exports.needs = nest({
   'blob.sync.url': 'first',
@@ -38,7 +38,7 @@ exports.create = function (api) {
         }
       })
     }
-    
+
     return h('Markdown', {
       hooks: [
         LoadingBlobHook(api.blob.obs.has)
