@@ -1,6 +1,6 @@
 {
   "name": "patchcore",
-  "version": "1.27.2",
+  "version": "1.28.0",
   "description": "minimal core for ssb clients",
   "main": "index.js",
   "scripts": {
