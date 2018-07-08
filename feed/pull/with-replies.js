@@ -19,7 +19,7 @@ exports.create = function (api) {
       var backlinks = api.backlinks.obs.for(rootMessage.key)
       onceTrue(backlinks.sync, () => {
         var replies = resolve(backlinks).filter(msg => {
-          return api.message.sync.root(msg) === rootMessage.key && !api.message.sync.isBlocked(msg)
+          return api.message.sync.root(msg) === rootMessage.key && !api.message.sync.isBlocked(msg, rootMessage)
         })
         cb(null, extend(rootMessage, { replies }))
       })
