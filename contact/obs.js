@@ -10,7 +10,7 @@ exports.needs = nest({
 })
 
 exports.gives = nest({
-  'contact.obs': ['following', 'followers', 'blocking', 'blockers'],
+  'contact.obs': ['following', 'followers', 'blocking', 'blockers', 'raw'],
   'sbot.hook.publish': true
 })
 
@@ -32,7 +32,8 @@ exports.create = function (api) {
       following: (key) => matchingValueKeys(get(key, cache), true),
       followers: (key) => matchingValueKeys(get(key, reverseCache), true),
       blocking: (key) => matchingValueKeys(get(key, cache), false),
-      blockers: (key) => matchingValueKeys(get(key, reverseCache), false)
+      blockers: (key) => matchingValueKeys(get(key, reverseCache), false),
+      raw: (key) => get(key, cache)
     },
     'sbot.hook.publish': function (msg) {
       if (!isContact(msg)) return

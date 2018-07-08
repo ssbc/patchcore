@@ -4,7 +4,7 @@ var ref = require('ssb-ref')
 var isBlog = require('scuttle-blog/isBlog')
 var Blog = require('scuttle-blog')
 
-var { Array: MutantArray, Value, map, computed, concat } = require('mutant')
+var { Array: MutantArray, Value, map, computed, concat, ProxyCollection } = require('mutant')
 
 exports.needs = nest({
   'backlinks.obs.for': 'first',
@@ -24,43 +24,46 @@ exports.create = function (api) {
     if (!ref.isLink(rootId)) throw new Error('an id must be specified')
     var sync = Value(false)
     var { isBlocked, root } = api.message.sync
+    var replies = ProxyCollection()
 
     var prepend = MutantArray()
     api.sbot.async.get(rootId, (err, value) => {
+      var rootMessage = null
       if (!err) {
-        var msg = unboxIfNeeded({key: rootId, value})
-        if (isBlocked(msg)) msg.isBlocked = true
+        rootMessage = unboxIfNeeded({key: rootId, value})
+        if (isBlocked(rootMessage)) rootMessage.isBlocked = true
 
-        if (isBlog(msg)) {
+        if (isBlog(rootMessage)) {
           // resolve the blog body before returning
-          Blog(api.sbot.obs.connection).async.get(msg, (err, result) => {
+          Blog(api.sbot.obs.connection).async.get(rootMessage, (err, result) => {
             if (!err) {
-              msg.body = result.body
-              prepend.push(Value(msg))
+              rootMessage.body = result.body
+              prepend.push(Value(rootMessage))
               sync.set(true)
             }
           })
         } else {
           sync.set(true)
-          prepend.push(Value(msg))
+          prepend.push(Value(rootMessage))
         }
       } else {
         sync.set(true)
       }
+
+      // calcaulate after message has been resolved so that we can check if thread author blocks the reply
+      // wrap computed in a map to turn into individual observables
+      replies.set(map(computed(backlinks, (msgs) => {
+        return sort(msgs.filter(msg => {
+          const { type, branch } = msg.value.content
+          return type !== 'vote' && !isBlocked(msg, rootMessage) && (root(msg) === rootId || matchAny(branch, rootId))
+        }))
+      }), x => Value(x), {
+        // avoid refresh of entire list when items added
+        comparer: (a, b) => a === b
+      }))
     })
 
     var backlinks = api.backlinks.obs.for(rootId)
-
-    // wrap computed in a map to turn into individual observables
-    var replies = map(computed(backlinks, (msgs) => {
-      return sort(msgs.filter(msg => {
-        const { type, branch } = msg.value.content
-        return type !== 'vote' && !isBlocked(msg) && (root(msg) === rootId || matchAny(branch, rootId))
-      }))
-    }), x => Value(x), {
-      // avoid refresh of entire list when items added
-      comparer: (a, b) => a === b
-    })
 
     // append the root message to the sorted replies list
     // -------------------------
