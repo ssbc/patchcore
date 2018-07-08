@@ -28,19 +28,16 @@ module.exports = {
           var mimeType = mime(file.name)
           var fileName = file.name
 
-          getFileData(file, function(fileData) {
-            var orientation = 0;
-            if (mimeType == "image/jpeg") {
+          getFileData(file, function (fileData) {
+            var orientation = 0
+            if (mimeType === 'image/jpeg') {
               try {
                 orientation = getOrientation(fileData)
 
-                if ((typeof opts.removeExif == 'function' && opts.removeExif()) ||
-                  opts.removeExif === true)
-                  fileData = removeExif(fileData, orientation)
-              }
-              catch (ex)
-              {
-                console.log("exif exception:", ex)
+                if ((typeof opts.removeExif === 'function' && opts.removeExif()) ||
+                  opts.removeExif === true) { fileData = removeExif(fileData, orientation) }
+              } catch (ex) {
+                console.log('exif exception:', ex)
               }
             }
 
@@ -68,15 +65,15 @@ module.exports = {
             }
           })
 
-          function dataURItoBlob(dataURI) {
-            var byteString = atob(dataURI.split(',')[1]);
+          function dataURItoBlob (dataURI) {
+            var byteString = window.atob(dataURI.split(',')[1])
             var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
-            var ab = new ArrayBuffer(byteString.length);
-            var ia = new Uint8Array(ab);
+            var ab = new ArrayBuffer(byteString.length)
+            var ia = new Uint8Array(ab)
             for (var i = 0; i < byteString.length; i++) {
-              ia[i] = byteString.charCodeAt(i);
+              ia[i] = byteString.charCodeAt(i)
             }
-            return new Blob([ab], {type: mimeString});
+            return new window.Blob([ab], {type: mimeString})
           }
 
           function next (file) {
@@ -137,8 +134,7 @@ function resize (image, width, height) {
   return canvas
 }
 
-function getFileData(file, cb)
-{
+function getFileData (file, cb) {
   var reader = new global.FileReader()
   reader.onload = function (e) {
     cb(e.target.result)
@@ -148,19 +144,19 @@ function getFileData(file, cb)
 
 function removeExif (fileData, orientation) {
   var clean = piexif.remove(fileData)
-  if (orientation != undefined) { // preserve
-    var exifData = { "0th": {} }
-    exifData["0th"][piexif.ImageIFD.Orientation] = orientation
+  if (orientation !== undefined) { // preserve
+    var exifData = { '0th': {} }
+    exifData['0th'][piexif.ImageIFD.Orientation] = orientation
     var exifStr = piexif.dump(exifData)
     return piexif.insert(exifStr, clean)
-  }
-  else
+  } else {
     return clean
+  }
 }
 
 function getOrientation (fileData) {
-  var exif = piexif.load(fileData);
-  return exif["0th"][piexif.ImageIFD.Orientation]
+  var exif = piexif.load(fileData)
+  return exif['0th'][piexif.ImageIFD.Orientation]
 }
 
 function rotate (img, orientation) {
