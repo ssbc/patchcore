@@ -1,4 +1,4 @@
-var { h, computed, when, send } = require('mutant')
+var { h, computed, when } = require('mutant')
 var nest = require('depnest')
 
 exports.needs = nest({
@@ -10,28 +10,20 @@ exports.needs = nest({
 exports.gives = nest('message.html.action')
 
 exports.create = (api) => {
-  return nest('message.html.action', function (msg) {
+  return nest('message.html.action', function like (msg) {
     var id = api.keys.sync.id()
     var liked = computed([api.message.obs.likes(msg.key), id], doesLike)
     return when(liked,
       h('a.unlike', {
         href: '#',
-        'ev-click': send(unlike, msg)
+        'ev-click': () => publishLike(msg, false)
       }, 'Unlike'),
       h('a.like', {
         href: '#',
-        'ev-click': send(like, msg)
+        'ev-click': () => publishLike(msg, true)
       }, 'Like')
     )
   })
-
-  function like (msg) {
-    publishLike(msg, true)
-  }
-
-  function unlike (msg) {
-    publishLike(msg, false)
-  }
 
   function publishLike (msg, status = true) {
     var like = status ? {
@@ -56,4 +48,3 @@ exports.create = (api) => {
 function doesLike (likes, userId) {
   return likes.includes(userId)
 }
-
