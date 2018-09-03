@@ -17,6 +17,10 @@ exports.gives = nest('backlinks.obs.filter', true)
  * and passing it to the filter function does not result in it returning
  * 'true' the message is not added to the observable list.
  *
+ * An optional backlinks cache (which should be constructed from backlinks.obs.cache can be
+ * supplied with opts.cache. A caller constructed cache is required because different
+ * pull stream filters might be used for different threads.
+ *
  * A 'sync' observable property is also added to the returned observable
  * which is 'true' when all previously seen messages are caught up with.
  *
@@ -25,9 +29,7 @@ exports.gives = nest('backlinks.obs.filter', true)
  */
 exports.create = function (api) {
 
-  var backlinksCache = api.backlinks.obs.cache();
-
-  function pullFilterReduceObs (id, opts) {
+  function pullFilterReduceObs (id, opts, backlinksCache) {
     if (!id || typeof (id) !== 'string') {
       throw new Error('id must be a string.')
     }
@@ -61,6 +63,17 @@ exports.create = function (api) {
   }
 
   return nest({
-    'backlinks.obs.filter': (id, opts) => pullFilterReduceObs(id, opts)
+    'backlinks.obs.filter': (id, opts) => {
+
+      // We cannot use a global cache as a consumer might use multiple
+      // observables with different filters. If the caller does not supply
+      // their own cache (constructed from obs-cache) we just create a new one
+      // per observable (effectively no cache, but with the correct cleanup behaviour.)
+      if (!opts || !opts.cache) {
+        cache = api.backlinks.obs.cache();
+      }
+
+      return pullFilterReduceObs(id, opts, cache)
+    }
   })
 }
