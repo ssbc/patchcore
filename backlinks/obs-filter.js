@@ -1,9 +1,10 @@
 var nest = require('depnest')
 var pull = require('pull-stream')
-var MutantPullReduce = require('mutant-pull-reduce')
+var BacklinksCache = require('./obs-cache')
 
 exports.needs = nest({
-  'sbot.pull.backlinks': 'first'
+  'sbot.pull.backlinks': 'first',
+  'backlinks.obs.cache': 'first'
 })
 
 exports.gives = nest('backlinks.obs.filter', true)
@@ -24,6 +25,9 @@ exports.gives = nest('backlinks.obs.filter', true)
  * callers that supply the same arguments.
  */
 exports.create = function (api) {
+
+  var backlinksCache = api.backlinks.obs.cache();
+
   function pullFilterReduceObs (id, opts) {
     if (!id || typeof (id) !== 'string') {
       throw new Error('id must be a string.')
@@ -54,16 +58,7 @@ exports.create = function (api) {
       pull.filter(msg => msg.sync || filterFunction(msg))
     )
 
-    var backlinksObs = MutantPullReduce(filteredBacklinks, (state, msg) => {
-      state.push(msg)
-      return state
-    }, {
-      startValue: [],
-      nextTick: true,
-      sync: true
-    })
-
-    return backlinksObs
+    return backlinksCache.cachedBacklinks(id, filteredBacklinks)
   }
 
   return nest({
