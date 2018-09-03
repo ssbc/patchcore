@@ -60,44 +60,43 @@ exports.create = function (api) {
       pull.filter(msg => msg.sync || filterFunction(msg))
     )
 
-    return backlinksCache.cachedBacklinks(id, filteredBacklinks)
+    if (backlinksCache) {
+      return backlinksCache.cachedBacklinks(id, filteredBacklinks)
+    } else {
+      return backlinksObs(id, filteredBacklinks);
+    }
   }
 
-  function noCache() {
+  function backlinksObs(id, backlinksPullStream) {
+      var sync = Value(false)
+      var aborter = Abortable()
+      var collection = Value([])
 
-    return {
-      cachedBacklinks: (id, backlinksPullStream) => {
-        var sync = Value(false)
-        var aborter = Abortable()
-        var collection = Value([])
+      var obs = computed([collection], x => x, {
+        onListen: () => {
+          // try not to saturate the thread
+          onceIdle(() => {
+            pull(
+              backlinksPullStream,
+              aborter,
+              pull.drain((msg) => {
+                if (msg.sync) {
+                  sync.set(true)
+                } else {
+                  var value = resolve(collection)
+                  value.push(msg)
+                  collection.set(value)
+                }
+              })
+            )
+          })
+        },
+        onUnlisten: () => aborter.abort
+      })
 
-        var obs = computed([collection], x => x, {
-          onListen: () => {
-            // try not to saturate the thread
-            onceIdle(() => {
-              pull(
-                backlinksPullStream,
-                aborter,
-                pull.drain((msg) => {
-                  if (msg.sync) {
-                    sync.set(true)
-                  } else {
-                    var value = resolve(collection)
-                    value.push(msg)
-                    collection.set(value)
-                  }
-                })
-              )
-            })
-          },
-          onUnlisten: () => aborter.abort
-        })
+      obs.sync = sync;
 
-        obs.sync = sync;
-
-        return obs;
-      }
-    }
+      return obs;
   }
 
   return nest({
@@ -106,16 +105,7 @@ exports.create = function (api) {
       // If a filter function is supplied in the options, we use it to filter
       // the links stream, otherwise we use all the messages from the stream
       var filterFunction = opts && opts.filter ? opts.filter : () => true
-
-      // We cannot use a global cache as a consumer might use multiple
-      // observables for the same thread ID with different filters. If the caller
-      // does not supply their own cache (constructed from obs-cache) we just
-      // create a new one per observable (effectively no cache, but with the correct
-      // cleanup behaviour when there are no listeners to the observable from the live
-      // pullstream .)
-      if (!opts || !opts.cache) {
-        cache = noCache();
-      }
+      var cache = opts ? opts.cache : null;
 
       return pullFilterReduceObs(id, filterFunction, cache)
     }
