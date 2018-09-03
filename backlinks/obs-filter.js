@@ -66,9 +66,11 @@ exports.create = function (api) {
     'backlinks.obs.filter': (id, opts) => {
 
       // We cannot use a global cache as a consumer might use multiple
-      // observables with different filters. If the caller does not supply
-      // their own cache (constructed from obs-cache) we just create a new one
-      // per observable (effectively no cache, but with the correct cleanup behaviour.)
+      // observables for the same thread ID with different filters. If the caller
+      // does not supply their own cache (constructed from obs-cache) we just
+      // create a new one per observable (effectively no cache, but with the correct
+      // cleanup behaviour when there are no listeners to the observable from the live
+      // pullstream .)
       if (!opts || !opts.cache) {
         cache = api.backlinks.obs.cache();
       }
