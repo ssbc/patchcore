@@ -19,7 +19,7 @@ exports.gives = nest('backlinks.obs.filter', true)
  *
  * An optional backlinks cache (which should be constructed from backlinks.obs.cache can be
  * supplied with opts.cache. A caller constructed cache is required because different
- * pull stream filters might be used for different threads.
+ * pull stream filters might be used for the same thread ID.
  *
  * A 'sync' observable property is also added to the returned observable
  * which is 'true' when all previously seen messages are caught up with.
