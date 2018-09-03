@@ -16,8 +16,8 @@ exports.create = function (api) {
 }
 
 /**
- * Creates a cache for backlinks observables by thread ID. The cache entry is a list
- * of messages built from a backlinks stream. The cache is evicted if there are no
+ * Creates a cache for backlinks observables by thread ID. The cache entry is an obserable
+ * list of messages built from a backlinks stream. The cache is evicted if there are no
  * listeners for the given backlinks observable for the configured amount of time,
  * or a default of 5 seconds
  */
