@@ -29,7 +29,7 @@ exports.gives = nest('backlinks.obs.filter', true)
  */
 exports.create = function (api) {
 
-  function pullFilterReduceObs (id, opts, backlinksCache) {
+  function pullFilterReduceObs (id, filterFunction, backlinksCache) {
     if (!id || typeof (id) !== 'string') {
       throw new Error('id must be a string.')
     }
@@ -46,10 +46,6 @@ exports.create = function (api) {
       live: true
     })
 
-    // If a filter function is supplied in the options, we use it to filter
-    // the links stream, otherwise we use all the messages from the stream
-    var filterFunction = opts && opts.filter ? opts.filter : () => true
-
     var filteredBacklinks = pull(
       msgBacklinks,
       // We need to allow 'msg.sync' even if the supplied filter function does not
@@ -65,6 +61,10 @@ exports.create = function (api) {
   return nest({
     'backlinks.obs.filter': (id, opts) => {
 
+      // If a filter function is supplied in the options, we use it to filter
+      // the links stream, otherwise we use all the messages from the stream
+      var filterFunction = opts && opts.filter ? opts.filter : () => true
+
       // We cannot use a global cache as a consumer might use multiple
       // observables for the same thread ID with different filters. If the caller
       // does not supply their own cache (constructed from obs-cache) we just
@@ -75,7 +75,7 @@ exports.create = function (api) {
         cache = api.backlinks.obs.cache();
       }
 
-      return pullFilterReduceObs(id, opts, cache)
+      return pullFilterReduceObs(id, filterFunction, cache)
     }
   })
 }
