@@ -1,5 +1,10 @@
 var nest = require('depnest')
 var pull = require('pull-stream')
+var Value = require('mutant/value')
+var computed = require('mutant/computed')
+var Abortable = require('pull-abortable')
+var onceIdle = require('mutant/once-idle')
+var resolve = require('mutant/resolve')
 
 exports.needs = nest({
   'sbot.pull.backlinks': 'first',
@@ -58,6 +63,43 @@ exports.create = function (api) {
     return backlinksCache.cachedBacklinks(id, filteredBacklinks)
   }
 
+  function noCache() {
+
+    return {
+      cachedBacklinks: (id, backlinksPullStream) => {
+        var sync = Value(false)
+        var aborter = Abortable()
+        var collection = Value([])
+
+        var obs = computed([collection], x => x, {
+          onListen: () => {
+            // try not to saturate the thread
+            onceIdle(() => {
+              pull(
+                backlinksPullStream,
+                aborter,
+                pull.drain((msg) => {
+                  if (msg.sync) {
+                    sync.set(true)
+                  } else {
+                    var value = resolve(collection)
+                    value.push(msg)
+                    collection.set(value)
+                  }
+                })
+              )
+            })
+          },
+          onUnlisten: () => aborter.abort
+        })
+
+        obs.sync = sync;
+
+        return obs;
+      }
+    }
+  }
+
   return nest({
     'backlinks.obs.filter': (id, opts) => {
 
@@ -72,7 +114,7 @@ exports.create = function (api) {
       // cleanup behaviour when there are no listeners to the observable from the live
       // pullstream .)
       if (!opts || !opts.cache) {
-        cache = api.backlinks.obs.cache();
+        cache = noCache();
       }
 
       return pullFilterReduceObs(id, filterFunction, cache)
