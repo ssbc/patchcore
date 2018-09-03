@@ -1,6 +1,5 @@
 var nest = require('depnest')
 var pull = require('pull-stream')
-var BacklinksCache = require('./obs-cache')
 
 exports.needs = nest({
   'sbot.pull.backlinks': 'first',
