@@ -22,15 +22,14 @@ exports.gives = nest('backlinks.obs.filter', true)
  * and passing it to the filter function does not result in it returning
  * 'true' the message is not added to the observable list.
  *
- * An optional backlinks cache (which should be constructed from backlinks.obs.cache can be
+ * An optional backlinks cache (which should be constructed from backlinks.obs.cache) can be
  * supplied with opts.cache. A caller constructed cache is required because different
- * pull stream filters might be used for the same thread ID.
+ * pull stream filters might be used for the same thread ID. If no cache is supplied,
+ * the backlinks observables will not be cached.
  *
  * A 'sync' observable property is also added to the returned observable
  * which is 'true' when all previously seen messages are caught up with.
  *
- * Note: Unlike backlinks.obs.for this does not cache the observable for
- * callers that supply the same arguments.
  */
 exports.create = function (api) {
 
