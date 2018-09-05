@@ -1,4 +1,5 @@
 var {Value, computed} = require('mutant')
+var onceTrue = require('mutant/once-true')
 var pull = require('pull-stream')
 var nest = require('depnest')
 var ref = require('ssb-ref')
@@ -7,6 +8,7 @@ var fallbackImageUrl = 'data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAA
 
 exports.needs = nest({
   'sbot.pull.stream': 'first',
+  'sbot.obs.connection': 'first',
   'blob.sync.url': 'first',
   'about.sync.shortFeedId': 'first',
   'keys.sync.id': 'first'
@@ -31,7 +33,9 @@ exports.gives = nest({
 exports.create = function (api) {
   var syncValue = Value(false)
   var sync = computed(syncValue, x => x)
-  var cache = null
+  var cache = {}
+
+  liveUpdates()
 
   return nest({
     'about.obs': {
@@ -82,45 +86,28 @@ exports.create = function (api) {
 
   function get (id) {
     if (!ref.isLink(id)) throw new Error('About requires an ssb ref!')
-    load()
-    if (!cache[id]) {
+    if (cache[id] == undefined) {
       cache[id] = Value({})
+      onceTrue(api.sbot.obs.connection, sbot => {
+        sbot.about.get({ dest: id}, function(err, val) {
+          cache[id].set(val)
+        })
+      })
     }
     return cache[id]
   }
 
-  function load () {
-    if (!cache) {
-      cache = {}
-      pull(
-        api.sbot.pull.stream(sbot => sbot.about.stream({live: true})),
-        pull.drain(item => {
-          for (var target in item) {
-            var state = get(target)
-            var lastState = state()
-            var values = item[target]
-            var changed = false
-            for (var key in values) {
-              var valuesForKey = lastState[key] = lastState[key] || {}
-              for (var author in values[key]) {
-                var value = values[key][author]
-                if (!valuesForKey[author] || value[1] > valuesForKey[author][1]) {
-                  valuesForKey[author] = value
-                  changed = true
-                }
-              }
-            }
-            if (changed) {
-              state.set(lastState)
-            }
+  function liveUpdates () {
+    pull(
+      api.sbot.pull.stream(sbot => sbot.about.stream({live: true})),
+      pull.drain(item => {
+        for (var target in item) {
+          if (cache[target] != undefined) {
+            cache[target].set(item[target])
           }
-
-          if (!syncValue()) {
-            syncValue.set(true)
-          }
-        })
-      )
-    }
+        }
+      })
+    )
   }
 }
 
