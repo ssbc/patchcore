@@ -106,6 +106,10 @@ exports.create = function (api) {
             cache[target].set(item[target])
           }
         }
+
+        if (!syncValue()) {
+          syncValue.set(true)
+        }
       })
     )
   }
