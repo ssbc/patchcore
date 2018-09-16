@@ -96,7 +96,23 @@ exports.create = function (api) {
       pull.drain(item => {
         for (var target in item) {
           if (cache[target] != undefined) {
-            cache[target].set(item[target])
+            var state = cache[target]
+            var lastState = state()
+            var values = item[target]
+            var changed = false
+            for (var key in values) {
+              var valuesForKey = lastState[key] = lastState[key] || {}
+              for (var author in values[key]) {
+                var value = values[key][author]
+                if (!valuesForKey[author] || value[1] > valuesForKey[author][1]) {
+                  valuesForKey[author] = value
+                  changed = true
+                }
+              }
+            }
+            if (changed) {
+              state.set(lastState)
+            }
           }
         }
       })
