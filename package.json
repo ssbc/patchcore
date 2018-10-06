@@ -50,7 +50,7 @@
     "pull-stream": "^3.5.0",
     "scuttle-blog": "^1.0.0",
     "sorted-array-functions": "^1.0.0",
-    "ssb-blob-files": "^1.1.0",
+    "ssb-blob-files": "^1.1.1",
     "ssb-client": "^4.5.2",
     "ssb-config": "^2.2.0",
     "ssb-feed": "^2.3.0",
