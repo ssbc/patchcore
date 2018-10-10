@@ -107,7 +107,7 @@ exports.create = function (api) {
     var changed = false
 
     for (var targetId in values) {
-      if (values[targetId] !== lastState[targetId]) {
+      if (sourceId != targetId && values[targetId] !== lastState[targetId]) {
         lastState[targetId] = values[targetId]
         changed = true
       }
