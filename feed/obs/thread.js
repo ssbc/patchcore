@@ -3,6 +3,7 @@ var sort = require('ssb-sort')
 var ref = require('ssb-ref')
 var isBlog = require('scuttle-blog/isBlog')
 var Blog = require('scuttle-blog')
+var get = require('lodash').get
 
 var { Array: MutantArray, Value, map, computed, concat, ProxyCollection } = require('mutant')
 
@@ -95,9 +96,7 @@ exports.create = function (api) {
         return PreviousKey(result.messages, msg)
       },
       isPrivate: computed(messages, msgs => {
-        if (!msgs[0]) return false
-
-        return msgs[0].value.private || false
+        return get(msgs[0], 'meta.value.private', false);
       }),
       channel: computed(messages, msgs => {
         if (!msgs[0]) return undefined
