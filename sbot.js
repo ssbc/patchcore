@@ -153,7 +153,7 @@ exports.create = function (api) {
           }
           if (cache[key]) cb(null, cache[key])
           else {
-            sbot.get(key, function (err, value) {
+            sbot.get({ id: key, private: true }, function (err, value) {
               if (err) return cb(err)
               runHooks({key, value})
               cb(null, value)
