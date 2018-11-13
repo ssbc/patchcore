@@ -18,11 +18,11 @@ exports.create = function (api) {
 
     // HACK: needed to select correct index and handle lt
     opts.query = [
-      {$filter: {
+      { $filter: {
         timestamp: typeof lt === 'number'
-          ? {$lt: lt, $gt: 0}
-          : {$gt: 0}
-      }}
+          ? { $lt: lt, $gt: 0 }
+          : { $gt: 0 }
+      } }
     ]
 
     return StreamWhenConnected(api.sbot.obs.connection, (sbot) => {

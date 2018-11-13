@@ -46,7 +46,7 @@ exports.create = function (api) {
             cb(null, cache.get(key))
           } else {
             api.sbot.async.get(key, (_, value) => {
-              var msg = {key, value}
+              var msg = { key, value }
               if (msg.value) {
                 cache.set(key, msg)
               }

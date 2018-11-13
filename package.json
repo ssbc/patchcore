@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electro example",
     "rebuild": "npm rebuild --runtime=electron --target=$(electron -v) --abi=$(electron --abi) --disturl=https://atom.io/download/atom-shell",
-    "test": "standard"
+    "lint": "standard --fix"
   },
   "repository": {
     "type": "git",

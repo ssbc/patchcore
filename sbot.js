@@ -139,7 +139,7 @@ exports.create = function (api) {
     }
   })
 
-  var feed = createFeed(internal, keys, {remote: true})
+  var feed = createFeed(internal, keys, { remote: true })
 
   return {
     sbot: {
@@ -155,7 +155,7 @@ exports.create = function (api) {
           else {
             sbot.get(key, function (err, value) {
               if (err) return cb(err)
-              runHooks({key, value})
+              runHooks({ key, value })
               cb(null, value)
             })
           }

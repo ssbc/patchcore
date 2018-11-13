@@ -14,7 +14,7 @@ exports.create = function (api) {
     const container = h('div')
 
     pull(
-      stream({reverse: true, limit: 100}),
+      stream({ reverse: true, limit: 100 }),
       pull.drain(msg => container.appendChild(api.message.html.render(msg)))
     )
 

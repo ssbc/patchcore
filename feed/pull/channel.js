@@ -25,13 +25,13 @@ exports.create = function (api) {
 
       var filter = {
         dest: `#${channel}`,
-        rts: typeof lt === 'number' ? {$lt: lt, $gt: 0} : {$gt: 0}
+        rts: typeof lt === 'number' ? { $lt: lt, $gt: 0 } : { $gt: 0 }
       }
 
       return pull(
         api.sbot.pull.backlinks(extend(opts, {
           query: [
-            {$filter: filter}
+            { $filter: filter }
           ]
         })),
         pull.filter(msg => !api.message.sync.isBlocked(msg))

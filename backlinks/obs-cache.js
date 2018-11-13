@@ -9,7 +9,6 @@ var nest = require('depnest')
 exports.gives = nest('backlinks.obs.cache', true)
 
 exports.create = function (api) {
-
   return nest({
     'backlinks.obs.cache': (cacheForMilliSeconds) => createCache(cacheForMilliSeconds)
   })
@@ -21,8 +20,7 @@ exports.create = function (api) {
  * listeners for the given backlinks observable for the configured amount of time,
  * or a default of 5 seconds
  */
-function createCache(cacheForMilliSeconds) {
-
+function createCache (cacheForMilliSeconds) {
   var cache = {}
 
   var newRemove = new Set()
@@ -61,7 +59,6 @@ function createCache(cacheForMilliSeconds) {
    * is aborted unless there is a new incoming listener
    */
   function cachedBacklinks (id, backlinksPullStream) {
-
     if (!cache[id]) {
       var sync = Value(false)
       var aborter = Abortable()
