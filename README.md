@@ -9,7 +9,7 @@ or _the shared assumptions of all (or most) ssb related applications_
 
 - [ssb-private](https://github.com/ssbc/ssb-private)
 - [ssb-backlinks](https://github.com/ssbc/ssb-backlinks)
-- [ssb-about](https://github.com/ssbc/ssb-about)
+- [ssb-about](https://github.com/ssbc/ssb-about) (NOTE: requires `ssb-about@2`)
 
 ## apps
 

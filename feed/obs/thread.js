@@ -31,7 +31,7 @@ exports.create = function (api) {
     api.sbot.async.get(rootId, (err, value) => {
       var rootMessage = null
       if (!err) {
-        rootMessage = unboxIfNeeded({key: rootId, value})
+        rootMessage = unboxIfNeeded({ key: rootId, value })
         if (isBlocked(rootMessage)) rootMessage.isBlocked = true
 
         if (isBlog(rootMessage)) {
@@ -110,7 +110,7 @@ exports.create = function (api) {
       })
     }
 
-    result.sync = computed([backlinks.sync, sync], (a, b) => a && b, {idle: true})
+    result.sync = computed([backlinks.sync, sync], (a, b) => a && b, { nextTick: true })
     return result
   }
 

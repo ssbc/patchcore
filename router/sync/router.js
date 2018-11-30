@@ -29,4 +29,3 @@ function buildRouter (routes) {
     if (route) return route[1](location)
   }
 }
-

@@ -1,12 +1,12 @@
 {
   "name": "patchcore",
-  "version": "1.28.3",
+  "version": "2.1.0",
   "description": "minimal core for ssb clients",
   "main": "index.js",
   "scripts": {
     "start": "electro example",
     "rebuild": "npm rebuild --runtime=electron --target=$(electron -v) --abi=$(electron --abi) --disturl=https://atom.io/download/atom-shell",
-    "test": "standard"
+    "lint": "standard --fix"
   },
   "repository": {
     "type": "git",
@@ -50,13 +50,14 @@
     "pull-stream": "^3.5.0",
     "scuttle-blog": "^1.0.0",
     "sorted-array-functions": "^1.0.0",
+    "ssb-about": "^2.0.0",
     "ssb-blob-files": "^1.1.1",
     "ssb-client": "^4.5.2",
     "ssb-config": "^2.2.0",
     "ssb-feed": "^2.3.0",
     "ssb-friends": "^2.2.3",
     "ssb-keys": "^7.0.9",
-    "ssb-markdown": "^3.6.0",
+    "ssb-markdown": "^4.0.0",
     "ssb-ref": "^2.11.0",
     "ssb-sort": "^1.0.0",
     "xtend": "^4.0.1"
@@ -71,7 +72,7 @@
     "depject": "github:dominictarr/depject#reduce-with-context",
     "electro": "^2.0.3",
     "insert-css": "^2.0.0",
-    "standard": "^8.6.0"
+    "standard": "^12.0.1"
   },
   "peerDependencies": {
     "scuttlebot": ">=13.1.0"

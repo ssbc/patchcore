@@ -53,7 +53,7 @@ exports.create = function (api) {
       onceIdle(() => {
         pull(
           api.sbot.pull.backlinks({
-            query: [ {$filter: { dest: id }} ],
+            query: [ { $filter: { dest: id } } ],
             index: 'DTA', // use asserted timestamps
             live: true
           }),

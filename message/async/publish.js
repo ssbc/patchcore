@@ -9,4 +9,3 @@ exports.needs = nest({
 exports.create = function (api) {
   return nest('message.async.publish', api.sbot.async.publish)
 }
-

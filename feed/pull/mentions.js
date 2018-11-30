@@ -23,10 +23,10 @@ exports.create = function (api) {
       opts = extend(opts, {
         lt: undefined,
         query: [
-          {$filter: {
+          { $filter: {
             dest: id,
-            timestamp: typeof lt === 'number' ? {$lt: lt, $gt: 0} : {$gt: 0}
-          }}
+            timestamp: typeof lt === 'number' ? { $lt: lt, $gt: 0 } : { $gt: 0 }
+          } }
         ]
       })
 

@@ -32,7 +32,6 @@ exports.gives = nest('backlinks.obs.filter', true)
  *
  */
 exports.create = function (api) {
-
   function pullFilterReduceObs (id, filterFunction, backlinksCache) {
     if (!id || typeof (id) !== 'string') {
       throw new Error('id must be a string.')
@@ -62,49 +61,48 @@ exports.create = function (api) {
     if (backlinksCache) {
       return backlinksCache.cachedBacklinks(id, filteredBacklinks)
     } else {
-      return backlinksObs(id, filteredBacklinks);
+      return backlinksObs(id, filteredBacklinks)
     }
   }
 
-  function backlinksObs(id, backlinksPullStream) {
-      var sync = Value(false)
-      var aborter = Abortable()
-      var collection = Value([])
+  function backlinksObs (id, backlinksPullStream) {
+    var sync = Value(false)
+    var aborter = Abortable()
+    var collection = Value([])
 
-      var obs = computed([collection], x => x, {
-        onListen: () => {
-          // try not to saturate the thread
-          onceIdle(() => {
-            pull(
-              backlinksPullStream,
-              aborter,
-              pull.drain((msg) => {
-                if (msg.sync) {
-                  sync.set(true)
-                } else {
-                  var value = resolve(collection)
-                  value.push(msg)
-                  collection.set(value)
-                }
-              })
-            )
-          })
-        },
-        onUnlisten: () => aborter.abort
-      })
+    var obs = computed([collection], x => x, {
+      onListen: () => {
+        // try not to saturate the thread
+        onceIdle(() => {
+          pull(
+            backlinksPullStream,
+            aborter,
+            pull.drain((msg) => {
+              if (msg.sync) {
+                sync.set(true)
+              } else {
+                var value = resolve(collection)
+                value.push(msg)
+                collection.set(value)
+              }
+            })
+          )
+        })
+      },
+      onUnlisten: () => aborter.abort
+    })
 
-      obs.sync = sync;
+    obs.sync = sync
 
-      return obs;
+    return obs
   }
 
   return nest({
     'backlinks.obs.filter': (id, opts) => {
-
       // If a filter function is supplied in the options, we use it to filter
       // the links stream, otherwise we use all the messages from the stream
       var filterFunction = opts && opts.filter ? opts.filter : () => true
-      var cache = opts ? opts.cache : null;
+      var cache = opts ? opts.cache : null
 
       return pullFilterReduceObs(id, filterFunction, cache)
     }
