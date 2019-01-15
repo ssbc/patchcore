@@ -55,7 +55,6 @@
     "ssb-client": "^4.5.2",
     "ssb-config": "^2.2.0",
     "ssb-feed": "^2.3.0",
-    "ssb-friends": "^2.2.3",
     "ssb-keys": "^7.0.9",
     "ssb-markdown": "^4.0.0",
     "ssb-ref": "^2.11.0",
