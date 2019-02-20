@@ -104,6 +104,7 @@ exports.create = function (api) {
     if (sbot) {
       sbot.gossip.peers((err, peers) => {
         if (err) return console.error(err)
+        if (!peers) return
         localPeers.set(peers.filter(x => x.source === 'local').map(x => x.key))
         connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
       })
@@ -114,6 +115,7 @@ exports.create = function (api) {
     if (sbot) {
       sbot.gossip.peers((err, peers) => {
         if (err) return console.error(err)
+        if (!peers) return
         connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
         localPeers.set(peers.filter(x => x.source === 'local').map(x => x.key))
       })
@@ -138,8 +140,6 @@ exports.create = function (api) {
       )
     }
   })
-
-  var feed = createFeed(internal, keys, { remote: true })
 
   return {
     sbot: {
@@ -190,7 +190,7 @@ exports.create = function (api) {
             })
           }
 
-          feed.add(content, (err, msg) => {
+          sbot.publish(content, (err, msg) => {
             if (err) console.error(err)
             else if (!cb) console.log(msg)
             cb && cb(err, msg)
