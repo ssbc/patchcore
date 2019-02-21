@@ -7,7 +7,8 @@ var pull = require('pull-stream')
 var onceIdle = require('mutant/once-idle')
 
 exports.needs = nest({
-  'sbot.pull.backlinks': 'first'
+  'sbot.pull.backlinks': 'first',
+  'sbot.ooo.get': 'first'
 })
 
 exports.gives = nest('backlinks.obs.for', true)
@@ -65,6 +66,13 @@ exports.create = function (api) {
               var value = resolve(collection)
               value.push(msg)
               collection.set(value)
+
+              // The message may be a response to a message we don't have because it is
+              // outside of our follow range. We can fetch those using ssb-ooo.
+              var repliesTo = msg.value.content.branch;
+              if (repliesTo && !messagesContainId(msg, repliesTo)) {
+                tryToUpdateWithMissingMessages(collection, id, repliesTo);
+              }
             }
           })
         )
@@ -79,6 +87,43 @@ exports.create = function (api) {
       cache[id].sync = sync
     }
     return cache[id]
+  }
+
+  function messagesContainId(messages, msgId) {
+    return messages.find(msg => msg.id === msgId)
+  }
+
+  function tryToUpdateWithMissingMessages(messagesObservable, rootId, branchId) {
+
+    var timeoutAfterMs = 5000;
+
+    api.sbot.ooo.get(branchId, timeoutAfterMs, (err, result) => {
+
+      // Ignore errors - the user might be offline, or not be connected to anyone that has the message
+      if (err) {
+        console.log("Error fetching message using ssb-ooo for backlinks observable: ")
+        console.log(err)
+      } else {
+
+        // If it forks off a message that's a backlink to the root, we don't want to add it to the collection
+        // as it's not a direct backlink
+        if (result.value.root === rootId) {
+          var value = resolve(messagesObservable)
+
+          // We add the newly retrieved message to backlinks observable
+          value.push(result)
+          messagesObservable.set(value)
+
+          // This message might also be a reply to a message in the thread we don't have, so we fetch this too
+          // if this is the case (hurray, recursion.)
+          var branch = result.value.content.branch;
+          if (branch && !messagesContainId(value, branch)) {
+            tryToUpdateWithMissingMessages(messagesObservable, rootId, branchId)
+          }
+        }
+      }
+
+    });
   }
 
   function use (id) {

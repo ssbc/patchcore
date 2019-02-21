@@ -42,6 +42,9 @@ exports.gives = {
       connection: true,
       connectedPeers: true,
       localPeers: true
+    },
+    ooo: {
+      get: true
     }
   }
 }
@@ -247,6 +250,15 @@ exports.create = function (api) {
         connection,
         connectedPeers: () => connectedPeers,
         localPeers: () => localPeers
+      },
+      ooo: {
+        get: (id, timeoutMs, cb) => {
+          if (!ssb.ooo) {
+            cb(new Error("ssb-ooo plugin is missing"))
+          } else {
+            sbot.ooo.get(id, timeoutMs, cb)
+          }
+        }
       }
     }
   }
