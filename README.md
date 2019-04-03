@@ -65,7 +65,7 @@ finally, the config, emoji, keys, and sbot topics types. it's just a single java
 - [feed](./docs/feed.md) - stuff related to feeds - aka streams of messages by one or more user
 - [invite](./docs/invite.md) - using invite codes
 - [keys](./docs/invite.md) - load the main identity
-- [message](./docs/message.md) - 
+- [message](./docs/message.md) - relating to messages generically, i.e. publishing messages or rendering things that are the same for multiple different message types.
 - [router](./docs/router.md)
 - sbot
 
