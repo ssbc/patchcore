@@ -57,17 +57,17 @@ finally, the config, emoji, keys, and sbot topics types. it's just a single java
 ### topics
 
 - lib (junk that isn't part of any topic and should really be published as a reusable module, but too lazy)
-- [about](./docs/about.md) - functions relating to `about` messages, for setting avatars and names.
-- [blob](./docs/blob.md) - related to images and files
-- [config](./docs/config.md) - `config.sync.load` method that loads config.
-- [contact](./docs/contact.md) - related to contact messages, for following and blocking.
-- [emoji](./docs/emoji.md) - :dancer: :tada: :joy_cat: :haircut_woman:
-- [feed](./docs/feed.md) - stuff related to feeds - aka streams of messages by one or more user
-- [invite](./docs/invite.md) - using invite codes
-- [keys](./docs/invite.md) - load the main identity
-- [message](./docs/message.md) - relating to messages generically, i.e. publishing messages or rendering things that are the same for multiple different message types.
-- [router](./docs/router.md)
-- sbot
+- [about](./docs/index.md#about) - functions relating to `about` messages, for setting avatars and names.
+- [blob](./docs/index.md#blob) - related to images and files
+- [config](./docs/index.md#config) - `config.sync.load` method that loads config.
+- [contact](./docs/index.md#contact) - related to contact messages, for following and blocking.
+- [emoji](./docs/index.md#emoji) - :dancer: :tada: :joy_cat: :haircut_woman:
+- [feed](./docs/index.md#feed - stuff related to feeds - aka streams of messages by one or more user
+- [invite](./docs/index.md#invite) - using invite codes
+- [keys](./docs/index.md#keys) - load the main identity
+- [message](./docs/index.md#message) - relating to messages generically, i.e. publishing messages or rendering things that are the same for multiple different message types.
+- [router](./docs/index.md#router)
+- [sbot](./sbot/index.md#sbot)
 
 ### types
 
