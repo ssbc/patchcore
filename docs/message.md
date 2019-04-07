@@ -40,6 +40,26 @@ returns an observable that resolves to a map of `{<author_id>: [timestamp, vote,
 
 an observable version of `message.async.name`
 
+## `message.html.markdown(content | text)`
+
+returns a HtmlElement `div` with `Markdown` classname, that has the markdown rendered
+inside of it. Because of some legacy quirks of patchwork@2, and historic messages
+that should still be displayed correctly, the markdown method takes the `content`
+of the ssb message - i.e `{text: <markdown_string>, mentions: [{name: <string>, link: <@id>}]}`
+this will mean all markdown mentions are rendered into links correctly.
+
+## `message.html.timestamp(msg)`
+
+renders a link to a message, shown as a relative time passed since that message was written,
+for example "1 week ago"
+
+## `message.html.meta(msg)`
+
+a when loaded as a [depject map](https://github.com/depject/depject#map---get-each-modules-opinion-about-a-thing)
+will return an array of rendered metadatas about a message. Patchcore only provides the channel,
+patchbay adds several other things. patchwork does not use this, instead it hardcodes all the
+message metadata.
+
 ## `message.html.*`
 
 * `message.html.action` returnns a button that applies an action to a message. (such as like or reply)
@@ -47,3 +67,4 @@ an observable version of `message.async.name`
 * `message.html.layout(msg, opts={content})` returns an html wrapper for a message, an html element, content must be provided.
 
 ... and a bunch more
+
