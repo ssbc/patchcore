@@ -31,6 +31,11 @@ here's a list of plugins that build on top of `patchcore`:
 ## depject
 
 to use this you must understand [depject](https://github.com/depject/depject)
+but also the historical context - depject is short for ~dependency injection"
+it was intended to make software that was very easy to add features to,
+but this didn't really work out. And most of the applications built on it
+embrace "strong opinions" but still happen to use depject, which is now inconvienient
+to change, because it's used throughout the entire app.
 
 ## directory structure
 
@@ -74,7 +79,7 @@ finally, the config, emoji, keys, and sbot topics types. it's just a single java
 - `sync` a function that returns an ordinary javascript value, such as a string or number. Usually a simple utility function.
 - `async` a function that takes a callback, and does IO. It may query the database or publish a message.
 - `pull` returns [pull-stream](https://github.com/pull-stream/pull-stream) [source](https://github.com/pull-stream/pull-stream#source-readable-stream-that-produces-values), [sink](https://github.com/pull-stream/pull-stream#sink-reader-or-writable-stream-that-consumes-values), or [through](https://github.com/pull-stream/pull-stream#through). Sometimes pull type returns a function that then creates a pull stream.
-- `obs` return a [mutant observable](https://github.com/mmckegg/mutant#readme) this is generally for things that change in real time or may load slowly, and you usually want to display them as a single thing (i.e. number of likes, or an avatar name). sometimes obs really just wrap async methods, but obs play more nicely with mutant than async functions do.
+- `obs` sometimes, return a [mutant observable](https://github.com/mmckegg/mutant#readme) this is generally for things that change in real time or may load slowly, and you usually want to display them as a single thing (i.e. number of likes, or an avatar name). sometimes obs really just wrap async methods, but obs play more nicely with mutant than async functions do, other times `obs` functions directly expose a obs, or expose a function that you pass the listener to.  
 - `html` returns an HtmlElement this may have dynamic behaviour.
 
 ## license
@@ -88,3 +93,5 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
