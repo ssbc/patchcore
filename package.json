@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electro example",
+    "docs": "rm docs/index.md; cat docs/*.md > docs/index.md",
     "rebuild": "npm rebuild --runtime=electron --target=$(electron -v) --abi=$(electron --abi) --disturl=https://atom.io/download/atom-shell",
     "lint": "standard --fix"
   },
@@ -74,3 +75,4 @@
     "standard": "^12.0.1"
   }
 }
+
