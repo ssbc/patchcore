@@ -25,7 +25,7 @@ exports.gives = {
       get: true,
       publish: true,
       addBlob: true,
-      gossipConnect: true,
+      connRememberConnect: true,
       friendsGet: true
     },
     pull: {
@@ -41,7 +41,8 @@ exports.gives = {
       connectionStatus: true,
       connection: true,
       connectedPeers: true,
-      localPeers: true
+      localPeers: true,
+      stagedPeers: true
     }
   }
 }
@@ -56,6 +57,7 @@ exports.create = function (api) {
   var connectionStatus = Value()
   var connectedPeers = MutantSet()
   var localPeers = MutantSet()
+  var stagedPeers = MutantSet()
 
   var rec = Reconnect(function (isConn) {
     function notify (value) {
@@ -100,40 +102,22 @@ exports.create = function (api) {
     })
   }
 
-  setInterval(function () {
-    if (sbot) {
-      sbot.gossip.peers((err, peers) => {
-        if (err) return console.error(err)
-        localPeers.set(peers.filter(x => x.source === 'local').map(x => x.key))
-        connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
-      })
-    }
-  }, 1000 * 60)
-
   watch(connection, (sbot) => {
     if (sbot) {
-      sbot.gossip.peers((err, peers) => {
-        if (err) return console.error(err)
-        connectedPeers.set(peers.filter(x => x.state === 'connected').map(x => x.key))
-        localPeers.set(peers.filter(x => x.source === 'local').map(x => x.key))
-      })
       pull(
-        sbot.gossip.changes(),
-        pull.drain(data => {
-          if (data.peer) {
-            if (data.type === 'remove' || data.type === 'disconnect') {
-              connectedPeers.delete(data.peer.key)
-            } else {
-              if (data.peer.source === 'local') {
-                localPeers.add(data.peer.key)
-              }
-              if (data.peer.state === 'connected') {
-                connectedPeers.add(data.peer.key)
-              } else {
-                connectedPeers.delete(data.peer.key)
-              }
-            }
-          }
+        sbot.conn.peers(),
+        pull.drain(entries => {
+          var peers = entries.filter(([, x]) => !!x.key).map(([address, data]) => ({ address, data }))
+          localPeers.set(peers.filter(peer => peer.data.type === 'lan'))
+          connectedPeers.set(peers.filter(peer => peer.data.state === 'connected'))
+        })
+      )
+
+      pull(
+        sbot.conn.stagedPeers(),
+        pull.drain(entries => {
+          var peers = entries.filter(([, x]) => !!x.key).map(([address, data]) => ({ address, data }))
+          stagedPeers.set(peers)
         })
       )
     }
@@ -202,8 +186,11 @@ exports.create = function (api) {
             sbot.blobs.add(cb)
           )
         }),
-        gossipConnect: rec.async(function (opts, cb) {
-          sbot.gossip.connect(opts, cb)
+        connRememberConnect: rec.async(function (address, data, cb) {
+          sbot.conn.remember(address, {autoconnect: true, ...data}, (err) => {
+            if (err) cb(err)
+            else sbot.conn.connect(address, data, cb)
+          })
         }),
         friendsGet: rec.async(function (opts, cb) {
           sbot.friends.get(opts, cb)
@@ -246,7 +233,8 @@ exports.create = function (api) {
         connectionStatus: (listener) => connectionStatus(listener),
         connection,
         connectedPeers: () => connectedPeers,
-        localPeers: () => localPeers
+        localPeers: () => localPeers,
+        stagedPeers: () => stagedPeers
       }
     }
   }

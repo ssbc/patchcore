@@ -75,7 +75,7 @@ returns config
 
 `(id, cb)` - block feed with key = `id`
 
-Note that blocking influences the observeable state of following, followers, blockers, blocking, 
+Note that blocking influences the observeable state of following, followers, blockers, blocking,
 
 
 ## `contact.async.unblock`
@@ -336,9 +336,9 @@ calls [`sbot.publish(content, cb)`](https://github.com/ssbc/ssb-db/#sbotpublishc
 calls `sbot.blobs.add()` except as an async function instead of a stream.
 [ssb-blobs](https://github.com/ssbc/ssb-blobs)
 
-## `sbot.async.gossipConnect(opts, cb)`
+## `sbot.async.connRememberConnect(address, data, cb)`
 
-calls [`sbot.gossip.connect(opts, cb)`](https://github.com/ssbc/ssb-gossip/blob/master/api.md#connect-async)
+calls [`sbot.conn.remember(address, data)`](https://github.com/staltz/ssb-conn/blob/master/README.md#api) followed by a [`sbot.conn.connect(address, data, cb)`](https://github.com/staltz/ssb-conn/blob/master/README.md#api)
 
 ## `sbot.friendsGet(opts, cb)`
 
@@ -394,3 +394,6 @@ returns the `connectedPeers` observable.
 
 returns the `localPeers` observable.
 
+## `sbot.obs.stagedPeers()`
+
+returns the `stagedPeers` observable.
