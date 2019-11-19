@@ -76,6 +76,6 @@
     "standard": "^12.0.1"
   },
   "peerDependencies": {
-    "scuttlebot": ">=13.1.0"
+    "ssb-db": ">=18.6.0"
   }
 }
