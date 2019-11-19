@@ -1,10 +1,11 @@
 {
   "name": "patchcore",
-  "version": "2.1.0",
+  "version": "2.1.7",
   "description": "minimal core for ssb clients",
   "main": "index.js",
   "scripts": {
     "start": "electro example",
+    "docs": "rm docs/index.md; cat docs/*.md > docs/index.md",
     "rebuild": "npm rebuild --runtime=electron --target=$(electron -v) --abi=$(electron --abi) --disturl=https://atom.io/download/atom-shell",
     "lint": "standard --fix"
   },
@@ -46,6 +47,7 @@
     "pull-abortable": "^4.1.0",
     "pull-cat": "^1.1.11",
     "pull-defer": "~0.2.2",
+    "pull-pause": "0.0.2",
     "pull-reconnect": "0.0.3",
     "pull-stream": "^3.5.0",
     "scuttle-blog": "^1.0.0",
@@ -55,7 +57,6 @@
     "ssb-client": "^4.5.2",
     "ssb-config": "^2.2.0",
     "ssb-feed": "^2.3.0",
-    "ssb-friends": "^2.2.3",
     "ssb-keys": "^7.0.9",
     "ssb-markdown": "^4.0.0",
     "ssb-ref": "^2.11.0",
