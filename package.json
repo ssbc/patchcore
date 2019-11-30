@@ -58,7 +58,7 @@
     "ssb-config": "^2.2.0",
     "ssb-feed": "^2.3.0",
     "ssb-keys": "^7.0.9",
-    "ssb-markdown": "^4.0.0",
+    "ssb-markdown": "^6.0.0",
     "ssb-ref": "^2.11.0",
     "ssb-sort": "^1.0.0",
     "xtend": "^4.0.1"
