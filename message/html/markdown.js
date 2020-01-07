@@ -5,6 +5,7 @@ const nest = require('depnest')
 var htmlEscape = require('html-escape')
 var watch = require('mutant/watch')
 const querystring = require('querystring')
+const nodeEmoji = require('node-emoji')
 
 exports.needs = nest({
   'blob.sync.url': 'first',
@@ -46,10 +47,13 @@ exports.create = function (api) {
       ],
       innerHTML: renderer.block(content.text, {
         emoji: (emoji) => {
-          var url = emojiMentions[emoji]
-            ? api.blob.sync.url(emojiMentions[emoji])
-            : api.emoji.sync.url(emoji)
-          return renderEmoji(emoji, url)
+          if (emojiMentions[emoji]) {
+            return renderEmoji(emoji, api.blob.sync.url(emojiMentions[emoji]))
+          } else {
+            // https://github.com/omnidan/node-emoji/issues/76
+            const emojiCharacter = nodeEmoji.get(emoji).replace(/:/g, '')
+            return `<span class="emoji">${emojiCharacter}</span>`
+          }
         },
         toUrl: (id) => {
           var link = ref.parseLink(id)

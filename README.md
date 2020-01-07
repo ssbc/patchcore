@@ -15,7 +15,6 @@ or _the shared assumptions of all (or most) ssb related applications_
 
 here's a list of apps in the wild using `patchcore`:
 
-- [`patchwork`](https://github.com/ssbc/patchwork)
 - [`patchbay`](https://github.com/ssbc/patchbay)
 - [`patchlite`](https://github.com/ssbc/patchlite)
 - [(add yours here)](https://github.com/ssbc/patchcore/edit/master/README.md)

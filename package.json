@@ -44,6 +44,7 @@
     "human-time": "0.0.1",
     "mutant": "^3.21.2",
     "mutant-pull-reduce": "^1.1.0",
+    "node-emoji": "^1.10.0",
     "pull-abortable": "^4.1.0",
     "pull-cat": "^1.1.11",
     "pull-defer": "~0.2.2",
