@@ -38,7 +38,7 @@
     "depnest": "^1.0.2",
     "emoji-named-characters": "^1.0.2",
     "es2040": "^1.2.4",
-    "flat": "^4.0.0",
+    "flat": "^5.0.1",
     "hashlru": "^2.2.0",
     "html-escape": "^2.0.0",
     "human-time": "0.0.1",
